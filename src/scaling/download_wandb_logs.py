@@ -8,7 +8,7 @@ from typing import List
 from tqdm import tqdm
 
 import wandb
-from olmo.scaling.scaling_laws.utils import (
+from .utils import (
     downstream,
     downstream_bpb,
     downstream_newline,

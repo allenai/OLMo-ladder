@@ -22,6 +22,7 @@ dependencies = [
     "omegaconf",
     "safetensors",
     "importlib_resources",
+    "scipy",
 ]
 
 [project.urls]
@@ -58,8 +59,12 @@ beaker = [
 wandb = [
     "wandb",
 ]
+plotting = [
+    "matplotlib",
+    "seaborn",
+]
 all = [
-    "ladder[dev,beaker,wandb]",
+    "ladder[dev,beaker,wandb,plotting]",
 ]
 
 [tool.setuptools]

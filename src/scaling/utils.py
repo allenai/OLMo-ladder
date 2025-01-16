@@ -925,8 +925,8 @@ def get_step2_data_by_name(
                     if config.mode == "train":
                         # last n points
                         if last_n_points > 0:
-                            xs = xs[-last_n_points:]
-                            ys = ys[-last_n_points:]
+                            xs = xs[-last_n_points:]  # type: ignore
+                            ys = ys[-last_n_points:]  # type: ignore
                             ds = ds[-last_n_points:]
                             ns = ns[-last_n_points:]
                             ls = ls[-last_n_points:]
