@@ -4,13 +4,13 @@ FROM ${BASE} as stable
 
 # Install other dependencies, but not the source code.
 COPY pyproject.toml .
-COPY src/my_package/__init__.py src/my_package/__init__.py
-COPY src/my_package/version.py src/my_package/version.py
+COPY src/ladder/__init__.py src/ladder/__init__.py
+COPY src/ladder/version.py src/ladder/version.py
 RUN pip install --no-cache-dir '.[all]' && \
-    pip uninstall -y my-package && \
+    pip uninstall -y ladder && \
     rm -rf *
 
-WORKDIR /app/my-package
+WORKDIR /app/ladder
 
 FROM stable as nightly
 

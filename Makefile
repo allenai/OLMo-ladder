@@ -3,10 +3,10 @@ BASE_IMAGE = ghcr.io/allenai/pytorch:2.4.0-cuda12.1-python3.11
 # in 'pyproject.toml' to include that nightly version.
 NIGHTLY_VERSION = "2.5.0.dev20240826+cu121 --index-url https://download.pytorch.org/whl/nightly/cu121"
 
-VERSION = $(shell python src/my_package/version.py)
-VERSION_SHORT = $(shell python src/my_package/version.py short)
-IMAGE_BASENAME = my-package
-BEAKER_WORKSPACE = ai2/my-package
+VERSION = $(shell python src/ladder/version.py)
+VERSION_SHORT = $(shell python src/ladder/version.py short)
+IMAGE_BASENAME = ladder
+BEAKER_WORKSPACE = ai2/ladder
 BEAKER_USER = $(shell beaker account whoami --format=json | jq -r '.[0].name')
 
 .PHONY : checks
@@ -32,7 +32,7 @@ type-check :
 .PHONY : docs
 docs :
 	rm -rf docs/build/
-	sphinx-autobuild -b html --watch src/my_package/ --watch README.md docs/source/ docs/build/
+	sphinx-autobuild -b html --watch src/ladder/ --watch README.md docs/source/ docs/build/
 
 .PHONY : build
 build :

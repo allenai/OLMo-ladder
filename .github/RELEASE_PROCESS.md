@@ -2,7 +2,7 @@
 
 ## Steps
 
-1. Update the version in `src/my_package/version.py`.
+1. Update the version in `src/ladder/version.py`.
 
 3. Run the release script:
 

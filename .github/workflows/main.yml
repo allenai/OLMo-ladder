@@ -148,7 +148,7 @@ jobs:
         with:
           spec: |
             version: v2
-            description: repo-template ${{ matrix.task.name }}
+            description: OLMo-ladder ${{ matrix.task.name }}
             budget: ai2/oe-training
             tasks:
               - name: tests
@@ -181,7 +181,7 @@ jobs:
                 command:
                   - "bash"
                   - "-c"
-                  - "git clone https://github.com/allenai/repo-template.git && cd repo-template && git checkout ${{ env.COMMIT_SHA }} && pip install -e .[all] && ${{ matrix.task.run }}"
+                  - "git clone https://github.com/allenai/OLMo-ladder.git && cd OLMo-ladder && git checkout ${{ env.COMMIT_SHA }} && pip install -e .[all] && ${{ matrix.task.run }}"
                 result:
                   path: /unused
           token: ${{ env.BEAKER_TOKEN }}
