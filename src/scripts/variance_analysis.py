@@ -24,7 +24,9 @@ from scaling.utils import (
     tasks,
 )
 
-warnings.filterwarnings("ignore", category=UserWarning, message="No artists with labels found to put in legend")
+warnings.filterwarnings(
+    "ignore", category=UserWarning, message="No artists with labels found to put in legend"
+)
 
 FONTSIZE = 9
 
@@ -32,13 +34,23 @@ FONTSIZE = 9
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-k", "--keys", nargs="+", default=[], help="For avg metrics. Use one of [all-val-lm, all-bpb]"
+        "-k",
+        "--keys",
+        nargs="+",
+        default=[],
+        help="For avg metrics. Use one of [all-val-lm, all-bpb]",
     )
-    parser.add_argument("--last_n_points", type=int, default=10, help="Number of ckpts to compute variance over")
-    parser.add_argument("-c", "--config-path", type=str, required=True, help="Path to config file")
-    parser.add_argument("-o", "--output-path", type=str, required=True, help="Path to write output figure")
     parser.add_argument(
-        "--print_table_as_latex", action="store_true", help="Whether to print the analysis table in latex"
+        "--last_n_points", type=int, default=10, help="Number of ckpts to compute variance over"
+    )
+    parser.add_argument("-c", "--config-path", type=str, required=True, help="Path to config file")
+    parser.add_argument(
+        "-o", "--output-path", type=str, required=True, help="Path to write output figure"
+    )
+    parser.add_argument(
+        "--print_table_as_latex",
+        action="store_true",
+        help="Whether to print the analysis table in latex",
     )
     parser.add_argument(
         "--run_prediction",
@@ -80,7 +92,9 @@ def inset_zoom_step2(ax, axins, x, y):
     ax.indicate_inset_zoom(axins, edgecolor="black")
 
 
-def _plot_single_variance_analysis(config, ds, xs, ys, task_name, last_n_points, loss_coeff_of_var, acc_coeff_of_var, ax1, ax2):
+def _plot_single_variance_analysis(
+    config, ds, xs, ys, task_name, last_n_points, loss_coeff_of_var, acc_coeff_of_var, ax1, ax2
+):
     assert config.mode == "eval"  # we are assuming that we have results of intermediate steps here
     total_points = len(ds)
     start_point = int(np.ceil(0.3 * total_points))
@@ -112,9 +126,7 @@ def _plot_single_variance_analysis(config, ds, xs, ys, task_name, last_n_points,
     ax1.set_ylabel("Task loss", fontsize=FONTSIZE)
     display_name = tasks[task_name].display_name if task_name in tasks else task_name
     ax1.set_title(
-        f"{display_name}\n"
-        + r"(Loss relative SD$_{10}$: "
-        + f"{loss_coeff_of_var*100:.2f}%)",
+        f"{display_name}\n" + r"(Loss relative SD$_{10}$: " + f"{loss_coeff_of_var*100:.2f}%)",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
@@ -148,9 +160,7 @@ def _plot_single_variance_analysis(config, ds, xs, ys, task_name, last_n_points,
     ax2.set_ylabel("Task RC accuracy", fontsize=FONTSIZE)
     display_name = tasks[task_name].display_name if task_name in tasks else task_name
     ax2.set_title(
-        f"{display_name}\n"
-        + r"(Accuracy relative SD$_{10}$: "
-        + f"{acc_coeff_of_var*100:.2f}%)",
+        f"{display_name}\n" + r"(Accuracy relative SD$_{10}$: " + f"{acc_coeff_of_var*100:.2f}%)",
         fontsize=FONTSIZE,
         fontweight="bold",
     )
@@ -164,7 +174,9 @@ def plot_variance_analysis(config, variance_results, last_n_points):
     if num_tasks < 4:
         n_groups = 1
         fig, axes = plt.subplots(
-            num_tasks // n_groups, 2 * n_groups, figsize=(2.75 * 2 * n_groups, 2.5 * (num_tasks // n_groups))
+            num_tasks // n_groups,
+            2 * n_groups,
+            figsize=(2.75 * 2 * n_groups, 2.5 * (num_tasks // n_groups)),
         )
     else:
         # Create a figure with spacing between the two groups of tasks
@@ -191,24 +203,27 @@ def plot_variance_analysis(config, variance_results, last_n_points):
 
     # Plot results
     for i, (task_name, results) in enumerate(variance_results.items()):
-        ax1: plt.Axes = axes[(i * 2) // (2*n_groups)][(i * 2) % (2*n_groups)]
-        ax2: plt.Axes = axes[(i * 2) // (2*n_groups)][((i * 2) % (2*n_groups))+1]
+        ax1: plt.Axes = axes[(i * 2) // (2 * n_groups)][(i * 2) % (2 * n_groups)]
+        ax2: plt.Axes = axes[(i * 2) // (2 * n_groups)][((i * 2) % (2 * n_groups)) + 1]
 
         _plot_single_variance_analysis(
-            config, 
-            results["data"]["ds"], results["data"]["xs"], results["data"]["ys"], 
-            task_name, 
-            last_n_points, 
-            results['loss_coeff_of_var'], 
-            results['acc_coeff_of_var'], 
-            ax1, ax2
+            config,
+            results["data"]["ds"],
+            results["data"]["xs"],
+            results["data"]["ys"],
+            task_name,
+            last_n_points,
+            results["loss_coeff_of_var"],
+            results["acc_coeff_of_var"],
+            ax1,
+            ax2,
         )
 
     # Collect all unique handles and labels
     all_handles = []
     all_labels = []
-    for row in axes:
-        for ax in row:
+    for row_ in axes:
+        for ax in row_:
             handles, labels = ax.get_legend_handles_labels()
             for handle, label in zip(handles, labels):
                 if label not in all_labels:
@@ -216,8 +231,8 @@ def plot_variance_analysis(config, variance_results, last_n_points):
                     all_labels.append(label)
 
     # Remove redundant labels / legends
-    for i, row in enumerate(axes):
-        for j, ax in enumerate(row):
+    for i, row_ in enumerate(axes):
+        for j, ax in enumerate(row_):
             if i != len(axes) - 1:
                 ax.set_xlabel("")
             if ax.get_legend():
@@ -242,18 +257,26 @@ def plot_variance_analysis(config, variance_results, last_n_points):
 
     df = pd.merge(
         pd.merge(
-            pd.DataFrame.from_dict({t: r['loss_std_dev'] for t, r in variance_results.items()}, orient="index")
+            pd.DataFrame.from_dict(
+                {t: r["loss_std_dev"] for t, r in variance_results.items()}, orient="index"
+            )
             .reset_index()
             .rename({0: "Loss SD", "index": "Task"}, axis=1),
-            pd.DataFrame.from_dict({t: r['loss_coeff_of_var'] for t, r in variance_results.items()}, orient="index")
+            pd.DataFrame.from_dict(
+                {t: r["loss_coeff_of_var"] for t, r in variance_results.items()}, orient="index"
+            )
             .reset_index()
             .rename({0: "Loss Rel SD (CV)", "index": "Task"}, axis=1),
         ),
         pd.merge(
-            pd.DataFrame.from_dict({t: r['acc_std_dev'] for t, r in variance_results.items()}, orient="index")
+            pd.DataFrame.from_dict(
+                {t: r["acc_std_dev"] for t, r in variance_results.items()}, orient="index"
+            )
             .reset_index()
             .rename({0: "Accuracy SD", "index": "Task"}, axis=1),
-            pd.DataFrame.from_dict({t: r['acc_coeff_of_var'] for t, r in variance_results.items()}, orient="index")
+            pd.DataFrame.from_dict(
+                {t: r["acc_coeff_of_var"] for t, r in variance_results.items()}, orient="index"
+            )
             .reset_index()
             .rename({0: "Accuracy Rel SD (CV)", "index": "Task"}, axis=1),
         ),
@@ -269,13 +292,15 @@ def compute_variance(configs, keys, last_n_points):
         data_by_name = get_step2_data_by_name(configs, task_name)
 
         # get only entry of data_by_name
-        assert len(data_by_name) == 1, f'Can only compute variance on one model at a time, seeing: {data_by_name.keys()}'
+        assert (
+            len(data_by_name) == 1
+        ), f"Can only compute variance on one model at a time, seeing: {data_by_name.keys()}"
         name = list(data_by_name.keys())[0]
         data = data_by_name[name]
-        
+
         config = configs[name]
 
-        ds = data["ds"][-last_n_points:]
+        # ds = data["ds"][-last_n_points:]
         xs = data["xs"][-last_n_points:]
         ys = data["ys"][-last_n_points:]
 
@@ -285,13 +310,13 @@ def compute_variance(configs, keys, last_n_points):
         acc_coeff_of_var = acc_std_dev / np.mean(ys)
 
         variance_results[task_name] = {
-            'config': config,
-            'data': data,
-            'last_n_points': last_n_points,
-            'loss_std_dev': loss_std_dev,
-            'acc_std_dev': acc_std_dev,
-            'loss_coeff_of_var': loss_coeff_of_var,
-            'acc_coeff_of_var': acc_coeff_of_var,
+            "config": config,
+            "data": data,
+            "last_n_points": last_n_points,
+            "loss_std_dev": loss_std_dev,
+            "acc_std_dev": acc_std_dev,
+            "loss_coeff_of_var": loss_coeff_of_var,
+            "acc_coeff_of_var": acc_coeff_of_var,
         }
 
     return name, variance_results
@@ -365,8 +390,12 @@ def run_two_step_prediction(keys_key):
 
     # Rename columns
     step1_df = step1_df[["Task", "Rel Error"]].rename(columns={"Rel Error": "7B Loss Rel Error"})
-    step2_df = step2_df[["Task", "Rel Error"]].rename(columns={"Rel Error": "7B Accuracy Rel Error"})
-    predict_df = predict_df[["Task", "Rel Error"]].rename(columns={"Rel Error": "7B Stacked Rel Error"})
+    step2_df = step2_df[["Task", "Rel Error"]].rename(
+        columns={"Rel Error": "7B Accuracy Rel Error"}
+    )
+    predict_df = predict_df[["Task", "Rel Error"]].rename(
+        columns={"Rel Error": "7B Stacked Rel Error"}
+    )
 
     return step1_df, step2_df, predict_df
 
@@ -384,7 +413,11 @@ def print_table(df, last_n_points, print_table_as_latex=False):
 
         def format_with_color(x, col, col_mean):
             if "CV" in col:
-                return "\\cellcolor{red!30}" + f"{x * 100:.2f} \\%" if x > col_mean else f"{x * 100:.2f} \\%"
+                return (
+                    "\\cellcolor{red!30}" + f"{x * 100:.2f} \\%"
+                    if x > col_mean
+                    else f"{x * 100:.2f} \\%"
+                )
             elif "Error" in col:
                 # return f'{x:.2f} \\%'
                 return (
@@ -417,14 +450,18 @@ def print_table(df, last_n_points, print_table_as_latex=False):
             if "CV" in col:
                 mean = means[col]
                 colored_df[col] = df[col].apply(
-                    lambda x: f"\033[91m{x*100:>10.2f}%\033[0m" if x > mean else f"\033[92m{x*100:>10.2f}%\033[0m"
+                    lambda x: f"\033[91m{x*100:>10.2f}%\033[0m"
+                    if x > mean
+                    else f"\033[92m{x*100:>10.2f}%\033[0m"
                 )
             elif "Error" in col:
                 colored_df[col] = df[col].apply(lambda x: f"\033[0m{abs(x)*100:>10.2f}%\033[0m")
             else:
                 mean = means[col]
                 colored_df[col] = df[col].apply(
-                    lambda x: f"\033[91m{x:>10.4f}\033[0m" if x > mean else f"\033[92m{x:>10.4f}\033[0m"
+                    lambda x: f"\033[91m{x:>10.4f}\033[0m"
+                    if x > mean
+                    else f"\033[92m{x:>10.4f}\033[0m"
                 )
 
         print(colored_df.to_string(justify="left", header=False))

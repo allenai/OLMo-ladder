@@ -166,14 +166,14 @@ def plot_step2(
     fit_fn = log_sigmoid_fit if use_log_sigmoid else sigmoid_fit
     grad_fit_fn = grad_log_sigmoid_fit if use_log_sigmoid else grad_sigmoid_fit
 
-    std_errors = get_std_errors(
-        plotted_predicted_data["xs"],
-        plotted_predicted_data["ys"],
-        coefficients,
-        cov,
-        fit_fn,
-        grad_fit_fn,
-    )
+    # std_errors = get_std_errors(
+    #     plotted_predicted_data["xs"],
+    #     plotted_predicted_data["ys"],
+    #     coefficients,
+    #     cov,
+    #     fit_fn,
+    #     grad_fit_fn,
+    # )
 
     # Compute prediction intervals
     # plotted_y_lower = plotted_predicted_data["ys"] - 1.96 * std_errors
