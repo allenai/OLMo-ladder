@@ -153,7 +153,8 @@ python src/scripts/variance_analysis.py \
 ![Variance Analysis](figures/variance.png)
 
 
-## Analyses
+## Analyses & Alternative Design Choices
+
 
 ### Compute vs Prediction Error
 
@@ -183,7 +184,20 @@ python src/scripts/compute_vs_error_analysis.py \
 
 ### Using C (FLOPs) instead of (N, D)
 
+```bash
+python src/scripts/predict_flops.py \
+    -k v2_main \
+    -c src/scripts/paper/configs/final.json \
+    --step2-config-path src/scripts/paper/configs/final.json \
+    -o src/scripts/paper/figures/chained_flops_main.png \
+    -n 6887575552 \
+    -d 3945065873408 \
+    -t 7B-4T \
+    --skip_perc 0.1 \
+    --moving_avg 5
+```
 
+![C instead of (N, D)](figures/chained_flops_main.png)
 
 7. Alternative intermediate features
 
