@@ -52,6 +52,9 @@ dev = [
     "sphinx-autobuild==2021.3.14",
     "sphinx-autodoc-typehints==1.23.3",
 ]
+olmo = [
+    "ai2-olmo>=v0.6.0",
+]
 beaker = [
     "beaker-py",
     "GitPython>=3.0,<4.0",
@@ -64,7 +67,7 @@ plotting = [
     "seaborn",
 ]
 all = [
-    "ladder[dev,beaker,wandb,plotting]",
+    "ladder[dev,beaker,wandb,plotting,olmo]",
 ]
 
 [tool.setuptools]

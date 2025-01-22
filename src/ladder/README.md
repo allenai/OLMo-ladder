@@ -3,9 +3,9 @@
 
 The ladder is a set of small model configurations.
 
-TODO: add details
+TODO: add details, add instructions on how to update model config
 
-TODO: use olmo-core instead of old olmo scripts.
+TODO: TODO: run olmo-core ladder code, compare against old code.
 
 ## Beaker usage
 
