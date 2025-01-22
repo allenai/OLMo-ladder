@@ -30,7 +30,7 @@ TODO
 | Chained prediction | Combined two-step prediction |
 | N | Number of model parameters |
 | D | Number of training tokens | 
-| F | Number of compute-FLOPs |
+| C | Number of compute-FLOPs |
 | Moving average | The metrics are smoothened over a window |
 | Skip perc | First few evaluated steps are skipped |
 
@@ -138,10 +138,6 @@ python src/scripts/predict.py \
 
 ![Chained](figures/chained_main.png)
 
-
-TODO: add other chained preds
-
-
 ## Variance analysis 
 
 ```bash
@@ -157,9 +153,37 @@ python src/scripts/variance_analysis.py \
 ![Variance Analysis](figures/variance.png)
 
 
-5. Analyses (Flops vs error, N vs error, D vs error).
+## Analyses
 
-6. C vs (N, D)
+### Compute vs Prediction Error
+
+```bash
+python src/scripts/compute_vs_error_analysis.py \
+    --moving_avg 5 \
+    --skip_perc 0.1 \
+    -o src/scripts/paper/figures/stacked_N_error_all.png \
+    --vary N \
+    --which_step all
+
+python src/scripts/compute_vs_error_analysis.py \
+    --moving_avg 5 \
+    --skip_perc 0.1 \
+    -o src/scripts/paper/figures/stacked_xC_error_all.png \
+    --vary xC \
+    --which_step all
+
+python src/scripts/compute_vs_error_analysis.py \
+    --moving_avg 5 \
+    --skip_perc 0.1 \
+    -o src/scripts/paper/figures/stacked_flops_error_all.pdf \
+    --vary flops \
+    --which_step all
+```
+![FLOPs vs Prediction Error](figures/stacked_flops_error_all.png)
+
+### Using C (FLOPs) instead of (N, D)
+
+
 
 7. Alternative intermediate features
 
