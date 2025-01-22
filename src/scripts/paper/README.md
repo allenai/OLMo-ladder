@@ -199,11 +199,21 @@ python src/scripts/predict_flops.py \
 
 ![C instead of (N, D)](figures/chained_flops_main.png)
 
-7. Alternative intermediate features
+### Predicting accuracy in a single step
 
-8. Single step vs two-step
+```bash
+python src/scripts/single_step.py \
+    -k v2_main \
+    -c src/scripts/paper/configs/final.json \
+    -o src/scripts/paper/figures/single_step_main.png \
+    --moving_avg 5
+```
 
-9. MC accuracy prediction -- ask Jiacheng re: figures
+![Single step prediction](figures/single_step_main.png)
+
+### Predicting MC accuracy
+
+
 
 
 ## Citation
