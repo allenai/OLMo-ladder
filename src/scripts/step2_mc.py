@@ -34,7 +34,11 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-k", "--keys", nargs="+", default=[], help="Key(s) for tasks")
     parser.add_argument(
-        "-x", "--x_metric", default="rc_bpb", choices=["rc_bpb", "c4", "rc_soft_log"], help="Metric as input"
+        "-x",
+        "--x_metric",
+        default="rc_bpb",
+        choices=["rc_bpb", "c4", "rc_soft_log"],
+        help="Metric as input",
     )
     parser.add_argument(
         "-y", "--y_metric", default="rc_acc", choices=["rc_acc", "mc_acc"], help="Metric to predict"
@@ -47,7 +51,9 @@ def parse_args():
         help="Percentage of intermediate ckpts to skip from the beginning (for loss to accuracy fitting)",
     )
     parser.add_argument("-c", "--config-path", nargs="+", default=[], help="Path to config file")
-    parser.add_argument("-o", "--output-path", type=str, required=True, help="Path to write output figure")
+    parser.add_argument(
+        "-o", "--output-path", type=str, required=True, help="Path to write output figure"
+    )
     parser.add_argument("--use_log_sigmoid", action="store_true", help="Use log sigmoid instead")
     args = parser.parse_args()
 
@@ -105,7 +111,7 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
     fit_fn = log_sigmoid_fit if use_log_sigmoid else sigmoid_fit
     grad_fit_fn = grad_log_sigmoid_fit if use_log_sigmoid else grad_sigmoid_fit
 
-    y, y_pred, rel_error, delta_error = 0, 0, 0, 0
+    y, y_pred, rel_error, delta_error = 0.0, 0.0, 0.0, 0.0
     all_rel_errors = []
 
     predicted_data_by_name = {}
@@ -113,12 +119,14 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
         config = configs[name]
         predicted_data_by_name[name] = {
             "xs": data["xs"],
-            "ys": [predict_fn(x, *coefficients) for x in data["xs"]],
+            "ys": [predict_fn(x, *coefficients) for x in data["xs"]],  # type: ignore
         }
         if config.mode == "eval":
             for x, y, y_pred in zip(data["xs"], data["ys"], predicted_data_by_name[name]["ys"]):
                 rel_error = (y_pred - y) / y
-                std_error = get_std_errors([x], [y_pred], coefficients, cov, fit_fn, grad_fit_fn)  # [0]
+                std_error = get_std_errors(
+                    [x], [y_pred], coefficients, cov, fit_fn, grad_fit_fn
+                )  # [0]
                 delta_error = 1.96 * std_error
 
                 all_rel_errors.append(rel_error)
@@ -130,10 +138,15 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
     xs = np.linspace(xmin, xmax, 100)
     plotted_predicted_data = {
         "xs": xs,
-        "ys": [predict_fn(x, *coefficients) for x in xs],
+        "ys": [predict_fn(x, *coefficients) for x in xs],  # type: ignore
     }
 
-    return predicted_data_by_name, plotted_predicted_data, (y, y_pred, rel_error, delta_error), all_rel_errors
+    return (
+        predicted_data_by_name,
+        plotted_predicted_data,
+        (y, y_pred, rel_error, delta_error),
+        all_rel_errors,
+    )
 
 
 def plot_step2(
@@ -163,8 +176,8 @@ def plot_step2(
     )
 
     # Compute prediction intervals
-    plotted_y_lower = plotted_predicted_data["ys"] - 1.96 * std_errors
-    plotted_y_upper = plotted_predicted_data["ys"] + 1.96 * std_errors
+    # plotted_y_lower = plotted_predicted_data["ys"] - 1.96 * std_errors
+    # plotted_y_upper = plotted_predicted_data["ys"] + 1.96 * std_errors
     unsigned_rel_errs = []
 
     global num_eval_annotation
@@ -278,7 +291,9 @@ def main():
     num_tasks = len(args.keys)
     num_cols = min(4, num_tasks)
     num_rows = (num_tasks + num_cols - 1) // num_cols
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(2.75 * num_cols, 2.5 * num_rows), squeeze=False)
+    fig, axes = plt.subplots(
+        num_rows, num_cols, figsize=(2.75 * num_cols, 2.5 * num_rows), squeeze=False
+    )
 
     results = {}
     results_str = "Task Name | Actual Value | Predicted Value | Relative Error"
@@ -381,7 +396,11 @@ def main():
 
     if args.output_path:
         fig.savefig(args.output_path, dpi=300, bbox_inches="tight")
-        df = pd.DataFrame.from_dict(results, orient="index").reset_index().rename({"index": "Task"}, axis=1)
+        df = (
+            pd.DataFrame.from_dict(results, orient="index")
+            .reset_index()
+            .rename({"index": "Task"}, axis=1)
+        )
         df.to_csv(args.output_path.replace(".pdf", ".csv"), index=False)
 
     print(results_str)

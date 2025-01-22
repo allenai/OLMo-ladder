@@ -16,11 +16,7 @@ from step1 import fit_step1
 from step2 import fit_step2
 from step2_mc import fit_step2 as fit_step2_mc
 
-from scaling.fitting_functions import (
-    chinchilla_n_d_fit,
-    log_sigmoid,
-    sigmoid,
-)
+from scaling.fitting_functions import chinchilla_n_d_fit, log_sigmoid, sigmoid
 from scaling.utils import (
     get_final_configs,
     get_step1_data_by_name,
@@ -36,10 +32,18 @@ FONTSIZE = 9
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-k", "--keys", nargs="+", default=[], help="For avg metrics. Use one of [all-val-lm, all-bpb]"
+        "-k",
+        "--keys",
+        nargs="+",
+        default=[],
+        help="For avg metrics. Use one of [all-val-lm, all-bpb]",
     )
     parser.add_argument(
-        "-x", "--x_metric", default="rc_bpb", choices=["rc_bpb", "c4", "rc_soft_log"], help="Metric as input"
+        "-x",
+        "--x_metric",
+        default="rc_bpb",
+        choices=["rc_bpb", "c4", "rc_soft_log"],
+        help="Metric as input",
     )
     parser.add_argument(
         "-y", "--y_metric", default="rc_acc", choices=["rc_acc", "mc_acc"], help="Metric to predict"
@@ -52,14 +56,24 @@ def parse_args():
         help="Percentage of intermediate ckpts to skip from the beginning (for loss to accuracy fitting)",
     )
     parser.add_argument("-c", "--config-path", type=str, required=True, help="Path to config file")
-    parser.add_argument("--step2-config-path", type=str, default=None, help="Path to config file for step2")
-    parser.add_argument("-o", "--output-path", type=str, required=True, help="Path to write output figure")
+    parser.add_argument(
+        "--step2-config-path", type=str, default=None, help="Path to config file for step2"
+    )
+    parser.add_argument(
+        "-o", "--output-path", type=str, required=True, help="Path to write output figure"
+    )
     parser.add_argument("-n", "--n", type=int, required=True, help="Model size of the target model")
     parser.add_argument("-d", "--d", type=int, required=True, help="Data size of the target model")
     parser.add_argument(
-        "-t", "--target-name", type=str, default=None, help="Path to the csv file of the target model"
+        "-t",
+        "--target-name",
+        type=str,
+        default=None,
+        help="Path to the csv file of the target model",
     )
-    parser.add_argument("--use_log_sigmoid", action="store_true", help="Use log sigmoid for fitting")
+    parser.add_argument(
+        "--use_log_sigmoid", action="store_true", help="Use log sigmoid for fitting"
+    )
     args = parser.parse_args()
 
     args.keys = get_task_sets(args.keys)
@@ -80,7 +94,7 @@ def predict_chained(data_by_name, step1_coefficients, step2_coefficients, use_lo
         predicted_data_by_name[name] = {
             "ds": data["ds"],
             "ys": [
-                fit_fn(chinchilla_n_d_fit([n, d], step1_coefficients), *step2_coefficients)
+                fit_fn(chinchilla_n_d_fit([n, d], step1_coefficients), *step2_coefficients)  # type: ignore
                 for n, d in zip(data["ns"], data["ds"])
             ],
         }
@@ -89,7 +103,7 @@ def predict_chained(data_by_name, step1_coefficients, step2_coefficients, use_lo
         plotted_predicted_data_by_name[name] = {
             "ds": ds,
             "ys": [
-                fit_fn(chinchilla_n_d_fit([n, d], step1_coefficients), *step2_coefficients)
+                fit_fn(chinchilla_n_d_fit([n, d], step1_coefficients), *step2_coefficients)  # type: ignore
                 for n, d in zip(ns, ds)
             ],
         }
@@ -141,18 +155,18 @@ def plot_chained(
         config = configs[name]
         predicted_data = predicted_data_by_name[name]
 
-        for i, (d, y, l) in enumerate(zip(data["ds"], data["xs"], data["ls"])):
+        for i, (d, y, ln) in enumerate(zip(data["ds"], data["xs"], data["ls"])):
             ax.scatter(
                 d,
                 y,
                 color=config.color,
-                marker=MARKERS[l] if config.mode == "train" else "o",
+                marker=MARKERS[ln] if config.mode == "train" else "o",
                 s=50 if config.mode == "train" else 20,
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
             )
 
         for d, y, y_pred in zip(data["ds"], data["xs"], predicted_data["ys"]):
-            rel_error = (y_pred - y) / y if y > 0 else float('inf')
+            rel_error = (y_pred - y) / y if y > 0 else float("inf")
             if config.mode == "train":
                 pass
             else:
@@ -200,7 +214,9 @@ def main():
     num_tasks = len(args.keys)
     num_cols = min(4, num_tasks)
     num_rows = (num_tasks + num_cols - 1) // num_cols
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(2.75 * num_cols, 2.25 * num_rows), squeeze=False)
+    fig, axes = plt.subplots(
+        num_rows, num_cols, figsize=(2.75 * num_cols, 2.25 * num_rows), squeeze=False
+    )
 
     results = {}
     results_str = "Task Name | Prediction | Actual | Rel Error"
@@ -224,7 +240,9 @@ def main():
         # fit the parameters
         step1_coefficients, _ = fit_step1(step1_data_by_name, y_metric=args.x_metric)
         if args.y_metric == "rc_acc":
-            step2_coefficients, _ = fit_step2(step2_data_by_name, task_name, args.y_metric, args.use_log_sigmoid)
+            step2_coefficients, _ = fit_step2(
+                step2_data_by_name, task_name, args.y_metric, args.use_log_sigmoid
+            )
         elif args.y_metric == "mc_acc":
             step2_coefficients, _ = fit_step2_mc(
                 step2_data_by_name, task_name, args.y_metric, args.use_log_sigmoid
@@ -233,7 +251,11 @@ def main():
             raise ValueError(f"Invalid y_metric: {args.y_metric})")
 
         # make predictions
-        predicted_data_by_name, plotted_predicted_data_by_name, (y, y_pred, rel_error) = predict_chained(
+        (
+            predicted_data_by_name,
+            plotted_predicted_data_by_name,
+            (y, y_pred, rel_error),
+        ) = predict_chained(
             single_step_data_by_name, step1_coefficients, step2_coefficients, args.use_log_sigmoid
         )
 
@@ -250,15 +272,13 @@ def main():
         # make predictions
         pred_loss = chinchilla_n_d_fit([args.n, args.d], step1_coefficients)
         fit_fn = log_sigmoid if args.use_log_sigmoid else sigmoid
-        pred_acc = fit_fn(pred_loss, *step2_coefficients)
+        pred_acc = fit_fn(pred_loss, *step2_coefficients)  # type: ignore
         if args.target_name:
             data = step2_data_by_name[args.target_name]
             actual_acc = data["ys"][-1]
             rel_error = np.abs(pred_acc - actual_acc) / actual_acc
             results[task_name] = {"Actual": y, "Pred": y_pred, "Rel Error": rel_error}
-            results_str += (
-                f"\n{task_name} | {pred_acc * 100:.1f} | {actual_acc * 100:.1f} | {rel_error * 100:.1f}%"
-            )
+            results_str += f"\n{task_name} | {pred_acc * 100:.1f} | {actual_acc * 100:.1f} | {rel_error * 100:.1f}%"
         else:
             results_str += f"\n{task_name} | {pred_acc * 100:.1f} | - | -"
 
@@ -291,7 +311,11 @@ def main():
 
     if args.output_path:
         fig.savefig(args.output_path, dpi=300, bbox_inches="tight")
-        df = pd.DataFrame.from_dict(results, orient="index").reset_index().rename({"index": "Task"}, axis=1)
+        df = (
+            pd.DataFrame.from_dict(results, orient="index")
+            .reset_index()
+            .rename({"index": "Task"}, axis=1)
+        )
         df.to_csv(args.output_path.replace(".pdf", ".csv").replace(".png", ".csv"), index=False)
 
     print(results_str)

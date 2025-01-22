@@ -43,7 +43,9 @@ def parse_args():
     )
     parser.add_argument("--moving_avg", type=int, default=1, help="Moving average for bpb loss")
     parser.add_argument("-c", "--config-path", type=str, required=True, help="Path to config file")
-    parser.add_argument("-o", "--output-path", type=str, required=False, help="Path to write output figure")
+    parser.add_argument(
+        "-o", "--output-path", type=str, required=False, help="Path to write output figure"
+    )
     args = parser.parse_args()
 
     if not args.keys:
@@ -151,7 +153,12 @@ def predict_step1(configs, data_by_name, coefficients, y_metric):
                 rel_error_t = (y_pred - y) / y
                 unsigned_rel_errors.append(np.abs(rel_error_t))
 
-    return predicted_data_by_name, plotted_predicted_data_by_name, (e_y, e_y_pred, rel_error), unsigned_rel_errors
+    return (
+        predicted_data_by_name,
+        plotted_predicted_data_by_name,
+        (e_y, e_y_pred, rel_error),
+        unsigned_rel_errors,
+    )
 
 
 def str_chinchilla_n_d_fit(coefficients):
@@ -193,12 +200,12 @@ def plot_step1(
         config = configs[name]
         predicted_data = predicted_data_by_name[name]
 
-        for i, (d, x, l) in enumerate(zip(data["ds"], data["xs"], data["ls"])):
+        for i, (d, x, ln) in enumerate(zip(data["ds"], data["xs"], data["ls"])):
             ax.scatter(
                 d,
                 x,
                 color=config.color,
-                marker=MARKERS[l] if config.mode == "train" else "o",
+                marker=MARKERS[ln] if config.mode == "train" else "o",
                 s=50 if config.mode == "train" else 20,
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
             )
@@ -262,7 +269,9 @@ def main():
     fitting_error = 0
 
     if args.output_path:
-        fig, axes = plt.subplots(num_rows, num_cols, figsize=(2.75 * num_cols, 2.25 * num_rows), squeeze=False)
+        fig, axes = plt.subplots(
+            num_rows, num_cols, figsize=(2.75 * num_cols, 2.25 * num_rows), squeeze=False
+        )
 
     results = {}
     results_str = "Task Name | Actual Value | Predicted Value | Relative Error | Fitting Error"
@@ -294,7 +303,9 @@ def main():
             "Fit Error": avg_unsigned_rel_error,
         }
         results_str += f"\n{task_name} | {prettify(y, False)} | {prettify(y_pred, False)} | {prettify(rel_error)} | {prettify(avg_unsigned_rel_error)}"
-        params_str += f"{tasks[task_name].display_name} & ${str_chinchilla_n_d_fit(coefficients)}$ \\\\\n"
+        params_str += (
+            f"{tasks[task_name].display_name} & ${str_chinchilla_n_d_fit(coefficients)}$ \\\\\n"
+        )
 
         if args.output_path:
             plot_step1(
@@ -348,7 +359,11 @@ def main():
     for handle in legend.legend_handles:
         handle.set_alpha(1.0)
 
-    df = pd.DataFrame.from_dict(results, orient="index").reset_index().rename({"index": "Task"}, axis=1)
+    df = (
+        pd.DataFrame.from_dict(results, orient="index")
+        .reset_index()
+        .rename({"index": "Task"}, axis=1)
+    )
 
     if args.output_path:
         os.makedirs(os.path.dirname(args.output_path), exist_ok=True)

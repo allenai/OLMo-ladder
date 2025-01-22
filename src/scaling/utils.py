@@ -114,10 +114,18 @@ class DownstreamTaskPrediction:
         return self.task_loss_key if isinstance(self.task_loss_key, list) else [self.task_loss_key]
 
     def get_accuracy_keys(self):
-        return self.task_accuracy_key if isinstance(self.task_accuracy_key, list) else [self.task_accuracy_key]
+        return (
+            self.task_accuracy_key
+            if isinstance(self.task_accuracy_key, list)
+            else [self.task_accuracy_key]
+        )
 
     def get_mc_loss_keys(self):
-        return self.task_mc_loss_key if isinstance(self.task_mc_loss_key, list) else [self.task_mc_loss_key]
+        return (
+            self.task_mc_loss_key
+            if isinstance(self.task_mc_loss_key, list)
+            else [self.task_mc_loss_key]
+        )
 
     def get_mc_accuracy_keys(self):
         return (
@@ -127,7 +135,11 @@ class DownstreamTaskPrediction:
         )
 
     def get_soft_loss_keys(self):
-        return self.task_soft_loss_key if isinstance(self.task_soft_loss_key, list) else [self.task_soft_loss_key]
+        return (
+            self.task_soft_loss_key
+            if isinstance(self.task_soft_loss_key, list)
+            else [self.task_soft_loss_key]
+        )
 
     def get_log_soft_loss_keys(self):
         return (
@@ -157,7 +169,15 @@ core_names = [
     "socialiqa",
     "winogrande",
 ]
-core_small_names = ["hellaswag", "arc_challenge", "arc_easy", "piqa", "csqa", "socialiqa", "openbookqa"]
+core_small_names = [
+    "hellaswag",
+    "arc_challenge",
+    "arc_easy",
+    "piqa",
+    "csqa",
+    "socialiqa",
+    "openbookqa",
+]
 mmlu_names = ["mmlu_stem", "mmlu_humanities", "mmlu_social_sciences", "mmlu_other"]
 
 display_names = {
@@ -215,7 +235,9 @@ core_small_avg_5shot_tasks: Dict[str, DownstreamTaskPrediction] = {
             )
             for key in core_small_names
         ],
-        task_mc_loss_key=[f"eval/downstream_bpb/{key}_mc_5shot_bpb_bpb" for key in core_small_names],
+        task_mc_loss_key=[
+            f"eval/downstream_bpb/{key}_mc_5shot_bpb_bpb" for key in core_small_names
+        ],
         task_mc_accuracy_key=[f"eval/downstream/{key}_mc_5shot_acc" for key in core_small_names],
         task_minimum=0.25,
         task_maximum=1.0,
@@ -340,11 +362,17 @@ v2_core_small_5shot_tasks: Dict[str, DownstreamTaskPrediction] = {
 v2_mmlu_avg_val_5shot_tasks: Dict[str, DownstreamTaskPrediction] = {
     "mmlu_avg_val_5shot": DownstreamTaskPrediction(
         task_loss_key=[f"eval/downstream_bpb/{key}_rc_5shot_bpb" for key in v2_mmlu_val_names],
-        task_soft_loss_key=[f"eval/downstream_soft/{key}_rc_5shot_soft" for key in v2_mmlu_val_names],
-        task_log_soft_loss_key=[f"eval/downstream_soft_log/{key}_rc_5shot_soft_log" for key in v2_mmlu_val_names],
+        task_soft_loss_key=[
+            f"eval/downstream_soft/{key}_rc_5shot_soft" for key in v2_mmlu_val_names
+        ],
+        task_log_soft_loss_key=[
+            f"eval/downstream_soft_log/{key}_rc_5shot_soft_log" for key in v2_mmlu_val_names
+        ],
         task_accuracy_key=[f"eval/downstream/{key}_rc_5shot_len_norm" for key in v2_mmlu_val_names],
         task_mc_loss_key=[f"eval/downstream_bpb/{key}_mc_5shot_bpb" for key in v2_mmlu_val_names],
-        task_mc_accuracy_key=[f"eval/downstream/{key}_mc_5shot_len_norm" for key in v2_mmlu_val_names],
+        task_mc_accuracy_key=[
+            f"eval/downstream/{key}_mc_5shot_len_norm" for key in v2_mmlu_val_names
+        ],
         task_minimum=v2_minimums_rc.get("mmlu_avg_val", 0.25),
         task_maximum=v2_maximums_rc.get("mmlu_avg_val", 1.0),
         display_name="MMLU",
@@ -354,11 +382,19 @@ v2_mmlu_avg_val_5shot_tasks: Dict[str, DownstreamTaskPrediction] = {
 v2_mmlu_avg_test_5shot_tasks: Dict[str, DownstreamTaskPrediction] = {
     "mmlu_avg_test_5shot": DownstreamTaskPrediction(
         task_loss_key=[f"eval/downstream_bpb/{key}_rc_5shot_bpb" for key in v2_mmlu_test_names],
-        task_soft_loss_key=[f"eval/downstream_soft/{key}_rc_5shot_soft" for key in v2_mmlu_test_names],
-        task_log_soft_loss_key=[f"eval/downstream_soft_log/{key}_rc_5shot_soft_log" for key in v2_mmlu_test_names],
-        task_accuracy_key=[f"eval/downstream/{key}_rc_5shot_len_norm" for key in v2_mmlu_test_names],
+        task_soft_loss_key=[
+            f"eval/downstream_soft/{key}_rc_5shot_soft" for key in v2_mmlu_test_names
+        ],
+        task_log_soft_loss_key=[
+            f"eval/downstream_soft_log/{key}_rc_5shot_soft_log" for key in v2_mmlu_test_names
+        ],
+        task_accuracy_key=[
+            f"eval/downstream/{key}_rc_5shot_len_norm" for key in v2_mmlu_test_names
+        ],
         task_mc_loss_key=[f"eval/downstream_bpb/{key}_mc_5shot_bpb" for key in v2_mmlu_test_names],
-        task_mc_accuracy_key=[f"eval/downstream/{key}_mc_5shot_len_norm" for key in v2_mmlu_test_names],
+        task_mc_accuracy_key=[
+            f"eval/downstream/{key}_mc_5shot_len_norm" for key in v2_mmlu_test_names
+        ],
         task_minimum=v2_minimums_rc.get("mmlu_avg_test", 0.25),
         task_maximum=v2_maximums_rc.get("mmlu_avg_test", 1.0),
         display_name="MMLU",
@@ -366,12 +402,16 @@ v2_mmlu_avg_test_5shot_tasks: Dict[str, DownstreamTaskPrediction] = {
 }
 
 v2_main_avg_5shot_tasks: Dict[str, DownstreamTaskPrediction] = {
-    f"main_avg_5shot": DownstreamTaskPrediction(
+    "main_avg_5shot": DownstreamTaskPrediction(
         task_loss_key=[f"eval/downstream_bpb/{key}_rc_5shot_bpb" for key in v2_core_small_names]
         + [f"eval/downstream_bpb/{key}_rc_5shot_bpb" for key in v2_mmlu_test_names],
-        task_soft_loss_key=[f"eval/downstream_soft/{key}_rc_5shot_soft" for key in v2_core_small_names]
+        task_soft_loss_key=[
+            f"eval/downstream_soft/{key}_rc_5shot_soft" for key in v2_core_small_names
+        ]
         + [f"eval/downstream_soft/{key}_rc_5shot_soft" for key in v2_mmlu_test_names],
-        task_log_soft_loss_key=[f"eval/downstream_soft_log/{key}_rc_5shot_soft_log" for key in v2_core_small_names]
+        task_log_soft_loss_key=[
+            f"eval/downstream_soft_log/{key}_rc_5shot_soft_log" for key in v2_core_small_names
+        ]
         + [f"eval/downstream_soft_log/{key}_rc_5shot_soft_log" for key in v2_mmlu_test_names],
         task_accuracy_key=[
             f"eval/downstream/{key}_rc_5shot_len_norm"
@@ -408,13 +448,16 @@ def get_task_sets(keys):
         elif keys[0] == "all":
             keys = list(mmlu_var_tasks.keys()) + list(core_5shot_tasks.keys())
         elif keys[0] == "v2_main":
-            keys = list(v2_mmlu_avg_test_5shot_tasks.keys()) + list(v2_core_small_5shot_tasks.keys())
+            keys = list(v2_mmlu_avg_test_5shot_tasks.keys()) + list(
+                v2_core_small_5shot_tasks.keys()
+            )
         elif keys[0] == "v2_main_variance":
             keys = list(v2_mmlu_avg_test_5shot_tasks.keys()) + list(v2_core_5shot_tasks.keys())
             keys = [
                 k
                 for k in keys
-                if k not in ["openbookqa_val_5shot", "arc_challenge_val_5shot", "arc_easy_val_5shot"]
+                if k
+                not in ["openbookqa_val_5shot", "arc_challenge_val_5shot", "arc_easy_val_5shot"]
             ]
         elif keys[0] == "v2_main_avg":
             keys = ["main_avg_5shot"]
@@ -560,7 +603,12 @@ downstream_newline_bpb = [
     "socialiqa_newline_mc_5shot_bpb",
 ]
 
-v1_tasks = {**mmlu_var_tasks, **mmlu_subset_var_tasks, **core_5shot_tasks, **core_small_avg_5shot_tasks}
+v1_tasks = {
+    **mmlu_var_tasks,
+    **mmlu_subset_var_tasks,
+    **core_5shot_tasks,
+    **core_small_avg_5shot_tasks,
+}
 v2_tasks = {**v2_mmlu_avg_val_5shot_tasks, **v2_mmlu_avg_test_5shot_tasks, **v2_core_5shot_tasks}
 tasks = {**v1_tasks, **v2_tasks, **v2_main_avg_5shot_tasks}
 
@@ -580,7 +628,9 @@ KEYS_BY_KEY = {
     "c4": ["eval/c4_en-validation/CrossEntropyLoss"],
 }
 for task_name, task in tasks.items():
-    KEYS_BY_KEY[task_name] = task.task_loss_key if isinstance(task.task_loss_key, list) else [task.task_loss_key]
+    KEYS_BY_KEY[task_name] = (
+        task.task_loss_key if isinstance(task.task_loss_key, list) else [task.task_loss_key]
+    )
 
 WEIGHT_BY_KEY = {
     "eval/downstream_bpb/mmlu_stem_var_bpb_bpb": 0.215,
@@ -673,13 +723,22 @@ def prettify(rel_error, is_percentage=True):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-k", "--key", type=str, default="", help="For avg metrics. Use one of [all-val-lm, all-bpb]"
+        "-k",
+        "--key",
+        type=str,
+        default="",
+        help="For avg metrics. Use one of [all-val-lm, all-bpb]",
     )
     parser.add_argument(
-        "--num_to_avg", type=int, default=1, help="Number of final ckpts to average (for final loss fitting)"
+        "--num_to_avg",
+        type=int,
+        default=1,
+        help="Number of final ckpts to average (for final loss fitting)",
     )
     parser.add_argument("-c", "--config-path", type=str, required=True, help="Path to config file")
-    parser.add_argument("-o", "--output-path", type=str, required=True, help="Path to write output figure")
+    parser.add_argument(
+        "-o", "--output-path", type=str, required=True, help="Path to write output figure"
+    )
     args = parser.parse_args()
 
     args.keys = KEYS_BY_KEY[args.key]
@@ -694,8 +753,12 @@ def get_final_configs(config_path: str):
     return configs
 
 
-def get_data_by_name(configs: Dict[str, ExtrapolateNConfig], keys: List[str], min_step: Optional[int] = None):
-    data_by_name: Dict = defaultdict(lambda: {"ns": [], "ds": [], "hs": [], "s1s": [], "s2s": [], "ys": []})
+def get_data_by_name(
+    configs: Dict[str, ExtrapolateNConfig], keys: List[str], min_step: Optional[int] = None
+):
+    data_by_name: Dict = defaultdict(
+        lambda: {"ns": [], "ds": [], "hs": [], "s1s": [], "s2s": [], "ys": []}
+    )
     for name, config in configs.items():
         n = config.n
         with open(config.path) as file_ref:
@@ -729,7 +792,8 @@ def get_data_by_name(configs: Dict[str, ExtrapolateNConfig], keys: List[str], mi
                 last_d = d
                 encountered_ds.add(d)
                 y = np.average(
-                    [float(row[key]) for key in keys], weights=[WEIGHT_BY_KEY.get(key, 1.0) for key in keys]
+                    [float(row[key]) for key in keys],
+                    weights=[WEIGHT_BY_KEY.get(key, 1.0) for key in keys],
                 )
                 if min_step is not None and d < min_step * batch_size:
                     continue
@@ -753,7 +817,8 @@ def get_step1_data_by_name(configs, task_name, y_metric="rc_bpb", moving_avg=1):
     elif y_metric == "rc_soft_log":
         keys = task.get_accuracy_keys()
         keys = [
-            key.replace("/downstream/", "/downstream_soft_log/").replace("_len_norm", "_soft_log") for key in keys
+            key.replace("/downstream/", "/downstream_soft_log/").replace("_len_norm", "_soft_log")
+            for key in keys
         ]
     else:
         raise ValueError(f"Invalid y_metric: {y_metric}")
@@ -775,7 +840,8 @@ def get_step1_data_by_name(configs, task_name, y_metric="rc_bpb", moving_avg=1):
                         d = int(float(row["_step"])) * int(float(row["batch_size_in_tokens"]))
                     f = float(d * MODEL_FLOPS[name.split("-")[0]])
                     x = np.average(
-                        [float(row[key]) for key in keys], weights=[WEIGHT_BY_KEY.get(key, 1.0) for key in keys]
+                        [float(row[key]) for key in keys],
+                        weights=[WEIGHT_BY_KEY.get(key, 1.0) for key in keys],
                     )
                     if y_metric == "rc_soft_log":
                         x *= -1
@@ -807,7 +873,8 @@ def get_flops_data_by_name(configs, keys, num_to_avg=1):
                     d = int(float(row["throughput/total_tokens"]))
                     f = d * MODEL_FLOPS[name]
                     y = np.average(
-                        [float(row[key]) for key in keys], weights=[WEIGHT_BY_KEY.get(key, 1.0) for key in keys]
+                        [float(row[key]) for key in keys],
+                        weights=[WEIGHT_BY_KEY.get(key, 1.0) for key in keys],
                     )
                     fs.append(f)
                     ys.append(y)
@@ -834,7 +901,13 @@ def get_length(path):
 
 
 def get_step2_data_by_name(
-    configs, task_name, x_metric="rc_bpb", y_metric="rc_acc", moving_avg=1, skip_perc=0.0, last_n_points=-1
+    configs,
+    task_name,
+    x_metric="rc_bpb",
+    y_metric="rc_acc",
+    moving_avg=1,
+    skip_perc=0.0,
+    last_n_points=-1,
 ):
     task = tasks[task_name]
     if x_metric == "rc_bpb":

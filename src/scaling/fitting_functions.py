@@ -17,12 +17,18 @@ def chinchilla_contaminated_fit(x, a, b, c, d):
 
 
 # Scipy curve_fit with least squares
-def get_coefficients(train_xs, train_ys, fitting_func, p0, bounds=(-np.inf, np.inf), disp=True, return_cov=False):
+def get_coefficients(
+    train_xs, train_ys, fitting_func, p0, bounds=(-np.inf, np.inf), disp=True, return_cov=False
+):
     if isinstance(train_xs[0], list):
         train_xs = np.array(train_xs).transpose()
-    coeffs, cov = scipy.optimize.curve_fit(fitting_func, train_xs, train_ys, p0=p0, bounds=bounds, maxfev=500000)
+    coeffs, cov = scipy.optimize.curve_fit(
+        fitting_func, train_xs, train_ys, p0=p0, bounds=bounds, maxfev=500000
+    )
     if disp:
-        coeffs_string = ", ".join([chr(ord("a") + i) + f" = {coeffs[i]:.2f}" for i in range(len(coeffs))])
+        coeffs_string = ", ".join(
+            [chr(ord("a") + i) + f" = {coeffs[i]:.2f}" for i in range(len(coeffs))]
+        )
         print(f"{fitting_func.__name__}: {coeffs_string}")
     if return_cov:
         return coeffs, cov
@@ -194,7 +200,12 @@ def grad_chinchilla_n_d_lr_log_fit(x, p):
 
 def chinchilla_n_d_lr_power_fit(x, p):
     # return e**a / x[0]**alpha + e**b / x[1]**beta + E + F * x[2] * x[0]**r
-    return np.exp(p[0]) / x[0] ** p[2] + np.exp(p[1]) / x[1] ** p[3] + p[4] + p[5] * x[2] * x[0] ** p[6]
+    return (
+        np.exp(p[0]) / x[0] ** p[2]
+        + np.exp(p[1]) / x[1] ** p[3]
+        + p[4]
+        + p[5] * x[2] * x[0] ** p[6]
+    )
 
 
 def grad_chinchilla_n_d_lr_power_fit(x, p):
@@ -210,7 +221,12 @@ def grad_chinchilla_n_d_lr_power_fit(x, p):
 
 def chinchilla_n_d_lr_power_minus_fit(x, p):
     # return e**a / x[0]**alpha + e**b / x[1]**beta + E - F * (1 - x[2]) * x[0]**r
-    return np.exp(p[0]) / x[0] ** p[2] + np.exp(p[1]) / x[1] ** p[3] + p[4] - p[5] * (1 - x[2]) * x[0] ** p[6]
+    return (
+        np.exp(p[0]) / x[0] ** p[2]
+        + np.exp(p[1]) / x[1] ** p[3]
+        + p[4]
+        - p[5] * (1 - x[2]) * x[0] ** p[6]
+    )
 
 
 def grad_chinchilla_n_d_lr_power_minus_fit(x, p):
@@ -315,7 +331,13 @@ def grad_chinchilla_n_d_lr_logt_minus_logtd_fit(x, p):
 
 def tissue_fit(x, p):
     # return e**a / x[0]**alpha + e**b / x[1]**beta + E - F * x[2] * x[0]**r
-    return max(1e-8, np.exp(p[0]) / x[0] ** p[2] + np.exp(p[1]) / x[1] ** p[3] + p[4] - p[5] * x[2] * x[0] ** p[6])
+    return max(
+        1e-8,
+        np.exp(p[0]) / x[0] ** p[2]
+        + np.exp(p[1]) / x[1] ** p[3]
+        + p[4]
+        - p[5] * x[2] * x[0] ** p[6],
+    )
 
 
 def grad_tissue_fit(x, p):
@@ -356,7 +378,7 @@ def grad_log_sigmoid_fit(x, p):
     grad_a = -log_term  # Derivative w.r.t. p[0]
     grad_x0 = (-p[0]) * d_log_term * (-p[2])  # Derivative w.r.t. p[1]
     grad_k = (-p[0]) * d_log_term * ((x - p[1]))  # Derivative w.r.t. p[2]
-    grad_b = 1  # Derivative w.r.t. p[3]
+    # grad_b = 1  # Derivative w.r.t. p[3]
 
     return [grad_a, grad_x0, grad_k]
 
@@ -404,7 +426,10 @@ def get_coefficients_huber(
         actuals = train_ys
         preds = [fitting_func(x, p) for x in train_xs]
         loss = np.sum(
-            [huber_loss(np.log(pred) - np.log(actual), delta=delta) for actual, pred in zip(actuals, preds)]
+            [
+                huber_loss(np.log(pred) - np.log(actual), delta=delta)
+                for actual, pred in zip(actuals, preds)
+            ]
         )
         return loss
 
@@ -415,7 +440,9 @@ def get_coefficients_huber(
         us = [np.log(pred) - np.log(actual) for actual, pred in zip(actuals, preds)]
         grad_us = [u if np.abs(u) < delta else (delta * np.abs(u) / u) for u in us]
         results = [
-            np.sum([grad_u * (1 / pred) * grad[i] for grad_u, pred, grad in zip(grad_us, preds, grads)])
+            np.sum(
+                [grad_u * (1 / pred) * grad[i] for grad_u, pred, grad in zip(grad_us, preds, grads)]
+            )
             for i in range(len(grads[0]))
         ]
         return results
@@ -453,7 +480,14 @@ def get_coefficients_huber(
 
 
 def get_coefficients_huber_nolog(
-    train_xs, train_ys, fitting_func, grad_func, p0, bounds, disp: bool = True, max_iter: int = 10000
+    train_xs,
+    train_ys,
+    fitting_func,
+    grad_func,
+    p0,
+    bounds,
+    disp: bool = True,
+    max_iter: int = 10000,
 ):
     def huber_loss(x, delta):
         if np.abs(x) < delta:
@@ -464,7 +498,9 @@ def get_coefficients_huber_nolog(
     def loss_fn(p, train_xs, train_ys, delta):
         actuals = train_ys
         preds = [fitting_func(x, p) for x in train_xs]
-        loss = np.sum([huber_loss(pred - actual, delta=delta) for actual, pred in zip(actuals, preds)])
+        loss = np.sum(
+            [huber_loss(pred - actual, delta=delta) for actual, pred in zip(actuals, preds)]
+        )
         return loss
 
     def jac_fn(p, train_xs, train_ys, delta):

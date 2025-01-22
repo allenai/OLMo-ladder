@@ -34,7 +34,11 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-k", "--keys", nargs="+", default=[], help="Key(s) for tasks")
     parser.add_argument(
-        "-x", "--x_metric", default="rc_bpb", choices=["rc_bpb", "c4", "rc_soft_log"], help="Metric as input"
+        "-x",
+        "--x_metric",
+        default="rc_bpb",
+        choices=["rc_bpb", "c4", "rc_soft_log"],
+        help="Metric as input",
     )
     parser.add_argument(
         "-y", "--y_metric", default="rc_acc", choices=["rc_acc", "mc_acc"], help="Metric to predict"
@@ -47,7 +51,9 @@ def parse_args():
         help="Percentage of intermediate ckpts to skip from the beginning (for loss to accuracy fitting)",
     )
     parser.add_argument("-c", "--config-path", type=str, required=True, help="Path to config file")
-    parser.add_argument("-o", "--output-path", type=str, required=True, help="Path to write output figure")
+    parser.add_argument(
+        "-o", "--output-path", type=str, required=True, help="Path to write output figure"
+    )
     parser.add_argument("--use_log_sigmoid", action="store_true", help="Use log sigmoid instead")
     args = parser.parse_args()
 
@@ -64,8 +70,10 @@ def fit_step2(data_by_name, task_name, y_metric, _min=None, _max=None, use_log_s
             data["xs"] = data["xs"][-1:]
             data["ys"] = data["ys"][-1:]
 
-    if _max is None: _max = tasks[task_name].task_maximum
-    if _min is None: _min = tasks[task_name].task_minimum
+    if _max is None:
+        _max = tasks[task_name].task_maximum
+    if _min is None:
+        _min = tasks[task_name].task_minimum
 
     # add ideal points (these are not plotted)
     if not use_log_sigmoid:
@@ -112,17 +120,19 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
         config = configs[name]
         predicted_data_by_name[name] = {
             "xs": data["xs"],
-            "ys": [predict_fn(x, *coefficients) for x in data["xs"]],
+            "ys": [predict_fn(x, *coefficients) for x in data["xs"]],  # type: ignore
         }
         if config.mode == "eval":
             for x, e_y, e_y_pred in zip(data["xs"], data["ys"], predicted_data_by_name[name]["ys"]):
-                rel_error = (e_y_pred - e_y) / e_y if e_y > 0 else float('inf')
-                std_error = get_std_errors([x], [e_y_pred], coefficients, cov, fit_fn, grad_fit_fn)  # [0]
+                rel_error = (e_y_pred - e_y) / e_y if e_y > 0 else float("inf")
+                std_error = get_std_errors(
+                    [x], [e_y_pred], coefficients, cov, fit_fn, grad_fit_fn
+                )  # [0]
                 delta_error = 1.96 * std_error
         else:
             predicted_data = predicted_data_by_name[name]
             for x, y, y_pred in zip(data["xs"], data["ys"], predicted_data["ys"]):
-                rel_error_t = (y_pred - y) / y if y > 0 else float('inf')
+                rel_error_t = (y_pred - y) / y if y > 0 else float("inf")
                 unsigned_rel_errors.append(np.abs(rel_error_t))
 
     xmin = min(min(data["xs"]) for data in data_by_name.values())
@@ -132,7 +142,7 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
     xs = np.linspace(xmin, xmax, 100)
     plotted_predicted_data = {
         "xs": xs,
-        "ys": [predict_fn(x, *coefficients) for x in xs],
+        "ys": [predict_fn(x, *coefficients) for x in xs],  # type: ignore
     }
 
     return (
@@ -194,12 +204,12 @@ def plot_step2(
                 label=f"{config.label} ({'fitted' if config.mode == 'train' else 'target'})",
             )
         for i, (x, y, y_pred) in enumerate(zip(data["xs"], data["ys"], predicted_data["ys"])):
-            rel_error = (y_pred - y) / y if y > 0 else float('inf')
+            rel_error = (y_pred - y) / y if y > 0 else float("inf")
 
             if config.mode == "train":
                 unsigned_rel_errs.append(abs(rel_error))
             else:
-                if i == 0:                    
+                if i == 0:
                     ax.scatter(
                         x,
                         y,
@@ -228,9 +238,11 @@ def plot_step2(
                     )
                     num_eval_annotation += 1
                     if add_texts:
-                        texts += [ax.text(
-                            x, y, config.label, fontsize=6, alpha=0.8, ha='center', va='center'
-                        )]
+                        texts += [
+                            ax.text(
+                                x, y, config.label, fontsize=6, alpha=0.8, ha="center", va="center"
+                            )
+                        ]
                 else:
                     pass
     avg_unsigned_rel_err = np.mean(unsigned_rel_errs)
@@ -244,30 +256,36 @@ def plot_step2(
         linewidth=1.5,
     )
 
-    ax.fill_between(plotted_predicted_data["xs"], plotted_y_lower, plotted_y_upper, color="pink", alpha=0.3)
+    ax.fill_between(
+        plotted_predicted_data["xs"], plotted_y_lower, plotted_y_upper, color="pink", alpha=0.3
+    )
 
     if len(texts) > 0:
         # Adjust text annotations to not overlap with each other
         import matplotlib
-        existing_annotations=[child for child in ax.get_children() if isinstance(child, matplotlib.text.Annotation)]
+
+        existing_annotations = [
+            child for child in ax.get_children() if isinstance(child, matplotlib.text.Annotation)
+        ]
 
         # Remove existing annotation
         for child in existing_annotations:
             child.remove()
 
         from adjustText import adjust_text
+
         adjust_text(
-            texts, 
-            arrowprops=dict(arrowstyle="-", color='gray', lw=0.5, alpha=0.5),
+            texts,
+            arrowprops=dict(arrowstyle="-", color="gray", lw=0.5, alpha=0.5),
             avoid_points=True,
             avoid_self=True,
             avoid_lines=True,
             existing_annotations=existing_annotations,
-            autoalign='xy',
+            autoalign="xy",
             force_points=0.5,
             force_text=0.2,
             expand_points=(1.5, 1.5),
-            ax=ax
+            ax=ax,
         )
 
     ax.legend(loc="upper right", ncols=1, fontsize=FONTSIZE)
@@ -314,7 +332,9 @@ def main():
     num_tasks = len(args.keys)
     num_cols = min(4, num_tasks)
     num_rows = (num_tasks + num_cols - 1) // num_cols
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(2.75 * num_cols, 2.5 * num_rows), squeeze=False)
+    fig, axes = plt.subplots(
+        num_rows, num_cols, figsize=(2.75 * num_cols, 2.5 * num_rows), squeeze=False
+    )
 
     results = {}
     results_str = "Task Name | Actual Value | Predicted Value | Relative Error"
@@ -331,7 +351,9 @@ def main():
             skip_perc=args.skip_perc,
         )
 
-        coefficients, cov = fit_step2(data_by_name, task_name, args.y_metric, use_log_sigmoid=args.use_log_sigmoid)
+        coefficients, cov = fit_step2(
+            data_by_name, task_name, args.y_metric, use_log_sigmoid=args.use_log_sigmoid
+        )
         # a, x0, k, b = coefficients
 
         # make predictions
@@ -341,7 +363,12 @@ def main():
             (y, y_pred, rel_error, delta_error),
             all_rel_errors,
         ) = predict_step2(
-            configs, data_by_name, coefficients, cov, y_metric=args.y_metric, use_log_sigmoid=args.use_log_sigmoid
+            configs,
+            data_by_name,
+            coefficients,
+            cov,
+            y_metric=args.y_metric,
+            use_log_sigmoid=args.use_log_sigmoid,
         )
         rel_errors += all_rel_errors
 
@@ -409,7 +436,11 @@ def main():
     for handle in legend.legend_handles:
         handle.set_alpha(1.0)
 
-    df = pd.DataFrame.from_dict(results, orient="index").reset_index().rename({"index": "Task"}, axis=1)
+    df = (
+        pd.DataFrame.from_dict(results, orient="index")
+        .reset_index()
+        .rename({"index": "Task"}, axis=1)
+    )
 
     if args.output_path:
         fig.savefig(args.output_path, dpi=300, bbox_inches="tight")

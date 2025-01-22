@@ -16,12 +16,12 @@ from step2 import fit_step2, predict_step2
 
 from scaling.fitting_functions import chinchilla_n_d_fit, sigmoid
 from scaling.utils import (
+    MODEL_FLOPS,
+    MODEL_PARAMS,
     FinalConfig,
     get_step1_data_by_name,
     get_step2_data_by_name,
     tasks,
-    MODEL_FLOPS,
-    MODEL_PARAMS,
 )
 
 MODELS = ["190M", "370M", "760M", "1.3B"]
@@ -32,6 +32,7 @@ COLOR_MAP = {"190M": "darkred", "370M": "darkorange", "760M": "darkgreen", "1.3B
 TARGET_COLOR = "darkviolet"
 
 STEP_COLORS = {"step1": "rosybrown", "step2": "grey", "stacked": "darkgreen"}
+
 
 def path_name(N, mult):
     path_mapper = {"1.3B": "1B", "3.2B": "3B"}
@@ -96,7 +97,12 @@ def predict_stacked(configs, data_by_name, step1_coefficients, step2_coefficient
             ],
         }
 
-    return predicted_data_by_name, plotted_predicted_data_by_name, (e_y, e_y_pred, rel_error), unsigned_rel_errors
+    return (
+        predicted_data_by_name,
+        plotted_predicted_data_by_name,
+        (e_y, e_y_pred, rel_error),
+        unsigned_rel_errors,
+    )
 
 
 def run_all_steps(configs, moving_avg=1, skip_perc=0.0, which_error="pred_error"):
@@ -104,14 +110,16 @@ def run_all_steps(configs, moving_avg=1, skip_perc=0.0, which_error="pred_error"
     step2_fitting_error = 0.0
     stacked_fitting_error = 0.0
 
-    step1_pred_error = 0.0
-    step2_pred_error = 0.0
-    stacked_pred_error = 0.0
+    # step1_pred_error = 0.0
+    # step2_pred_error = 0.0
+    # stacked_pred_error = 0.0
 
     output = {}
 
     for task_name in TASKS:
-        step1_data_by_name = get_step1_data_by_name(configs, task_name, y_metric="rc_bpb", moving_avg=moving_avg)
+        step1_data_by_name = get_step1_data_by_name(
+            configs, task_name, y_metric="rc_bpb", moving_avg=moving_avg
+        )
 
         step1_coefficients, cov = fit_step1(step1_data_by_name, y_metric="rc_bpb")
 
@@ -140,8 +148,9 @@ def run_all_steps(configs, moving_avg=1, skip_perc=0.0, which_error="pred_error"
         step2_avg_unsigned_rel_error = np.mean(step2_unsigned_rel_errors)
         step2_fitting_error += step2_avg_unsigned_rel_error
 
-
-        step1_data_by_name = get_step1_data_by_name(configs, task_name, y_metric="rc_acc", moving_avg=args.moving_avg)
+        step1_data_by_name = get_step1_data_by_name(
+            configs, task_name, y_metric="rc_acc", moving_avg=args.moving_avg
+        )
 
         a, b, (y, y_pred, stacked_rel_error), stacked_unsigned_rel_errors = predict_stacked(
             configs, step1_data_by_name, step1_coefficients, step2_coefficients
@@ -176,14 +185,15 @@ def plot_vary_n(N_df, output_path, which_step):
     num_cols = min(4, num_tasks)
     num_rows = (num_tasks + num_cols - 1) // num_cols
 
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(3 * num_cols, 2.5 * num_rows), squeeze=False)
+    fig, axes = plt.subplots(
+        num_rows, num_cols, figsize=(3 * num_cols, 2.5 * num_rows), squeeze=False
+    )
 
     for i, task_name in enumerate(N_df.columns):
         ax = axes[i // num_cols][i % num_cols]
         task_df = N_df[task_name]
 
         if which_step == "all":
-            
             for step_ in ["step1", "step2", "stacked"]:
                 ax.plot(
                     [MODEL_PARAMS[model] for model in task_df.index],
@@ -193,7 +203,7 @@ def plot_vary_n(N_df, output_path, which_step):
                     linewidth=1.5,
                     label=step_ if step_ != "stacked" else "chained",
                 )
-            ax.set_ylabel(f"Prediction Error".title())
+            ax.set_ylabel("Prediction Error".title())
             ax.legend(loc="upper right", ncols=1, fontsize=8)
 
         else:
@@ -209,7 +219,7 @@ def plot_vary_n(N_df, output_path, which_step):
         ax.set_ylim([0, 1.0])
         # ax.set_xscale("log")
         ax.set_xlabel("(Upto) Model Size (N)")
-        
+
         ax.set_title(f"{tasks[task_name].display_name}", fontsize=FONTSIZE, fontweight="bold")
         # ax.set_xticks([MODEL_FLOPS[model] for model in task_df.index], task_df.index)
 
@@ -248,10 +258,19 @@ def run_predictions_vary_n(args, which_step="stacked"):
     configs = {TARGET_CONFIG["label"]: TARGET_CONFIG}
 
     for N in MODELS:
-        paths = [f"src/scripts/paper/data/ladder-runs/{path_name(N, mult)}.csv" for mult in CHINCHILLA_MULTIPLIERS]
-        configs[N] = {"paths": paths, "mode": "train", "n": MODEL_PARAMS[N], "label": N, "color": COLOR_MAP[N]}
+        paths = [
+            f"src/scripts/paper/data/ladder-runs/{path_name(N, mult)}.csv"
+            for mult in CHINCHILLA_MULTIPLIERS
+        ]
+        configs[N] = {
+            "paths": paths,
+            "mode": "train",
+            "n": MODEL_PARAMS[N],
+            "label": N,
+            "color": COLOR_MAP[N],
+        }
 
-        final_configs = {name: FinalConfig(**config) for name, config in configs.items()}
+        final_configs = {name: FinalConfig(**config) for name, config in configs.items()}  # type: ignore
 
         if N == "1.3B":
             print(final_configs)
@@ -272,7 +291,9 @@ def plot_vary_xC(xC_df, output_path, which_step):
     num_cols = min(4, num_tasks)
     num_rows = (num_tasks + num_cols - 1) // num_cols
 
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(3 * num_cols, 2.5 * num_rows), squeeze=False)
+    fig, axes = plt.subplots(
+        num_rows, num_cols, figsize=(3 * num_cols, 2.5 * num_rows), squeeze=False
+    )
 
     for i, task_name in enumerate(xC_df.columns):
         ax = axes[i // num_cols][i % num_cols]
@@ -288,7 +309,7 @@ def plot_vary_xC(xC_df, output_path, which_step):
                     linewidth=1.5,
                     label=step_ if step_ != "stacked" else "chained",
                 )
-            ax.set_ylabel(f"Prediction Error".title())
+            ax.set_ylabel("Prediction Error".title())
             ax.legend(loc="upper right", ncols=1, fontsize=8)
         else:
             ax.plot(
@@ -343,7 +364,9 @@ def run_predictions_vary_xC(args, which_step="stacked"):
     for mult in CHINCHILLA_MULTIPLIERS:
         for N in MODELS:
             if N in configs:
-                configs[N]["paths"] += [f"src/scripts/paper/data/ladder-runs/{path_name(N, mult)}.csv"]
+                configs[N]["paths"] += [
+                    f"src/scripts/paper/data/ladder-runs/{path_name(N, mult)}.csv"
+                ]  # type: ignore
             else:
                 paths = [f"src/scripts/paper/data/ladder-runs/{path_name(N, mult)}.csv"]
                 configs[N] = {
@@ -354,7 +377,7 @@ def run_predictions_vary_xC(args, which_step="stacked"):
                     "color": COLOR_MAP[N],
                 }
 
-        final_configs = {name: FinalConfig(**config) for name, config in configs.items()}
+        final_configs = {name: FinalConfig(**config) for name, config in configs.items()}  # type: ignore
 
         output = run_all_steps(final_configs, moving_avg=args.moving_avg, skip_perc=args.skip_perc)
 
@@ -374,7 +397,9 @@ def plot_vary_flops(flops_df, output_path, which_step, do_average=False):
         num_cols = min(4, num_tasks)
         num_rows = (num_tasks + num_cols - 1) // num_cols
 
-        fig, axes = plt.subplots(num_rows, num_cols, figsize=(3 * num_cols, 2.5 * num_rows), squeeze=False)
+        fig, axes = plt.subplots(
+            num_rows, num_cols, figsize=(3 * num_cols, 2.5 * num_rows), squeeze=False
+        )
 
         for i, task_name in enumerate(flops_df.columns):
             ax = axes[i // num_cols][i % num_cols]
@@ -390,7 +415,7 @@ def plot_vary_flops(flops_df, output_path, which_step, do_average=False):
                         linewidth=1.5,
                         label=step_ if step_ != "stacked" else "chained",
                     )
-                ax.set_ylabel(f"Prediction Error".title())
+                ax.set_ylabel("Prediction Error".title())
                 ax.legend(loc="upper right", ncols=1, fontsize=8)
             else:
                 ax.plot(
@@ -410,7 +435,9 @@ def plot_vary_flops(flops_df, output_path, which_step, do_average=False):
             # ax.set_xticks([MODEL_FLOPS[model] for model in task_df.index], task_df.index)
 
     else:
-        import pdb; pdb.set_trace()
+        import pdb
+
+        pdb.set_trace()
         flops_df["average"] = flops_df.mean(axis=1)
 
         fig, ax = plt.subplots(figsize=(3, 2.5))
@@ -426,7 +453,9 @@ def plot_vary_flops(flops_df, output_path, which_step, do_average=False):
         ax.set_xscale("log")
         ax.set_xlabel("Total flops used for prediction")
         ax.set_ylabel("Prediction Error")
-        ax.set_title(f"Average {which_step} prediction error".title(), fontsize=FONTSIZE, fontweight="bold")
+        ax.set_title(
+            f"Average {which_step} prediction error".title(), fontsize=FONTSIZE, fontweight="bold"
+        )
 
     fig.tight_layout()
 
@@ -455,7 +484,6 @@ def plot_vary_flops(flops_df, output_path, which_step, do_average=False):
         for handle in legend.legend_handles:
             handle.set_alpha(1.0)
 
-
     fig.savefig(output_path, dpi=300, bbox_inches="tight")
 
 
@@ -482,13 +510,19 @@ def run_predictions_vary_flops(args, which_step="stacked", do_average=False):
             N = "3.2B"
         mult = int(xC)
         if N in configs:
-            configs[N]["paths"] += [f"src/scripts/paper/data/ladder-runs/{path_name(N, mult)}.csv"]
+            configs[N]["paths"] += [f"src/scripts/paper/data/ladder-runs/{path_name(N, mult)}.csv"]  # type: ignore
         else:
             paths = [f"src/scripts/paper/data/ladder-runs/{path_name(N, mult)}.csv"]
             print(N)
-            configs[N] = {"paths": paths, "mode": "train", "n": MODEL_PARAMS[N], "label": N, "color": COLOR_MAP[N]}
+            configs[N] = {
+                "paths": paths,
+                "mode": "train",
+                "n": MODEL_PARAMS[N],
+                "label": N,
+                "color": COLOR_MAP[N],
+            }
 
-        final_configs = {name: FinalConfig(**config) for name, config in configs.items()}
+        final_configs = {name: FinalConfig(**config) for name, config in configs.items()}  # type: ignore
 
         output = run_all_steps(final_configs, moving_avg=args.moving_avg, skip_perc=args.skip_perc)
 
@@ -522,12 +556,18 @@ def run_predictions_vary_flops_step(args, which_step="stacked", do_average=False
         N, xC = run_name.replace("xC", "").split("-")
         mult = int(xC)
         if N in configs:
-            configs[N]["paths"] += [f"src/scripts/paper/data/ladder-runs/{path_name(N, mult)}.csv"]
+            configs[N]["paths"] += [f"src/scripts/paper/data/ladder-runs/{path_name(N, mult)}.csv"]  # type: ignore
         else:
             paths = [f"src/scripts/paper/data/ladder-runs/{path_name(N, mult)}.csv"]
-            configs[N] = {"paths": paths, "mode": "train", "n": MODEL_PARAMS[N], "label": N, "color": COLOR_MAP[N]}
+            configs[N] = {
+                "paths": paths,
+                "mode": "train",
+                "n": MODEL_PARAMS[N],
+                "label": N,
+                "color": COLOR_MAP[N],
+            }
 
-        final_configs = {name: FinalConfig(**config) for name, config in configs.items()}
+        final_configs = {name: FinalConfig(**config) for name, config in configs.items()}  # type: ignore
         print(final_configs)
 
         output = run_all_steps(final_configs, moving_avg=args.moving_avg, skip_perc=args.skip_perc)
@@ -552,7 +592,9 @@ def parse_args():
         default=0.0,
         help="Percentage of intermediate ckpts to skip from the beginning (for loss to accuracy fitting)",
     )
-    parser.add_argument("-o", "--output-path", type=str, required=True, help="Path to write output figure")
+    parser.add_argument(
+        "-o", "--output-path", type=str, required=True, help="Path to write output figure"
+    )
 
     parser.add_argument("--vary", type=str, default="flops")
     parser.add_argument("--which_step", type=str, default="stacked")

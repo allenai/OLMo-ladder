@@ -67,7 +67,9 @@ def get_data_at_n(config: ExtrapolateDConfig):
             d = float(row["throughput/total_tokens"])
             y = np.mean([float(row[key]) for key in config.keys])
             batch_size = int(row["batch_size_in_tokens"])
-            if config.outlier_threshold is not None and y > config.outlier_threshold:  # remove outliers
+            if (
+                config.outlier_threshold is not None and y > config.outlier_threshold
+            ):  # remove outliers
                 continue
             if config.train_step_min is not None and d <= config.train_step_min * batch_size:
                 continue

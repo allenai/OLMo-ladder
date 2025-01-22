@@ -5,9 +5,9 @@ import os.path
 import re
 from typing import List
 
+import wandb
 from tqdm import tqdm
 
-import wandb
 from .utils import (
     downstream,
     downstream_bpb,
@@ -47,7 +47,9 @@ def get_runs(run_paths: List) -> List:
         run_path = parse_run_path(run_path)
         run_name = run_path.split("/")[-1]
         wb_path = run_path.replace("/" + run_name, "")
-        wb_filters = {"$or": [{"display_name": (n if "*" not in n else {"$regex": n})} for n in [run_name]]}
+        wb_filters = {
+            "$or": [{"display_name": (n if "*" not in n else {"$regex": n})} for n in [run_name]]
+        }
         wb_runs = api.runs(path=wb_path, filters=wb_filters)
         print(f"Found {len(wb_runs)} matching runs in {wb_path}")
         all_wb_runs += wb_runs
@@ -56,9 +58,13 @@ def get_runs(run_paths: List) -> List:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-n", "--wandb-names", type=str, nargs="+", required=True, help="Full run name or regex")
+    parser.add_argument(
+        "-n", "--wandb-names", type=str, nargs="+", required=True, help="Full run name or regex"
+    )
     parser.add_argument("-x", "--x-axis", type=str, default="_step", help="X axis")
-    parser.add_argument("-y", "--y-axis", nargs="+", type=str, default=["train/Perplexity"], help="Y axis")
+    parser.add_argument(
+        "-y", "--y-axis", nargs="+", type=str, default=["train/Perplexity"], help="Y axis"
+    )
     parser.add_argument("-e", "--eval-only", action="store_true")
     parser.add_argument(
         "-o",
@@ -85,7 +91,9 @@ def main(args):
         args.y_axis = downstream
 
     elif args.y_axis == ["eval/validation-and-bpb-and-downstream"]:
-        args.y_axis = [f"eval/{d}/CrossEntropyLoss" for d in validation] + downstream_bpb + downstream
+        args.y_axis = (
+            [f"eval/{d}/CrossEntropyLoss" for d in validation] + downstream_bpb + downstream
+        )
 
     elif args.y_axis == ["eval/validation-and-bpb-and-downstream-newline"]:
         args.y_axis = (
@@ -124,7 +132,10 @@ def main(args):
 
     wb_runs = get_runs(args.wandb_names)
 
-    print("Downloading the data from the following wandb runs:\n", "\n".join([str(run) for run in wb_runs]))
+    print(
+        "Downloading the data from the following wandb runs:\n",
+        "\n".join([str(run) for run in wb_runs]),
+    )
 
     field_names = [args.x_axis] + args.y_axis
 
@@ -149,7 +160,8 @@ def main(args):
 
             config = json.loads(wb_run.json_config)
             batch_size_in_tokens = (
-                config["global_train_batch_size"]["value"] * config["model"]["value"]["max_sequence_length"]
+                config["global_train_batch_size"]["value"]
+                * config["model"]["value"]["max_sequence_length"]
             )
 
             for wb_step in history:

@@ -18,7 +18,9 @@ def get_data_at_n(config: ExtrapolateDConfig):
             h = float(row["optim/learning_rate_group0"]) / float(row["learning_rate_peak"])
             y = np.mean([float(row[key]) for key in config.keys])
             batch_size = int(row["batch_size_in_tokens"])
-            if config.outlier_threshold is not None and y > config.outlier_threshold:  # remove outliers
+            if (
+                config.outlier_threshold is not None and y > config.outlier_threshold
+            ):  # remove outliers
                 continue
             if config.train_step_min is not None and d <= config.train_step_min * batch_size:
                 continue
@@ -49,7 +51,9 @@ def plot_d_scaling_at_n(
 ):
     train_dhs = [[d, h] for d, h in zip(train_ds, train_hs)]
     eval_dhs = [[d, h] for d, h in zip(eval_ds, eval_hs)]
-    coefficients = get_coefficients_huber(train_dhs, train_ys, fitting_func, grad_func, p0=p0, bounds=None)
+    coefficients = get_coefficients_huber(
+        train_dhs, train_ys, fitting_func, grad_func, p0=p0, bounds=None
+    )
 
     plt.plot(
         train_ds + eval_ds,

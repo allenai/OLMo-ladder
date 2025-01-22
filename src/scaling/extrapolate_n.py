@@ -89,7 +89,9 @@ def plot_n_scaling_at_d(train_ns, train_ys, eval_ns, fitting_func, p0, **plot_kw
 
 
 def get_data_forall_d(configs: Dict[str, ExtrapolateNConfig]):
-    data_by_d: Dict = defaultdict(lambda: {"train_ns": [], "train_ys": [], "eval_ns": [], "eval_ys": []})
+    data_by_d: Dict = defaultdict(
+        lambda: {"train_ns": [], "train_ys": [], "eval_ns": [], "eval_ys": []}
+    )
     data_by_n: Dict = defaultdict(lambda: {"ds": [], "ys": []})
     for name, config in configs.items():
         n = config.n
@@ -109,10 +111,19 @@ def get_data_forall_d(configs: Dict[str, ExtrapolateNConfig]):
     return data_by_d, data_by_n
 
 
-def plot_n_scaling_forall_d(data_by_d, data_by_n, configs, fitting_func, p0=[20, -0.1, 0.0], **plot_kwargs):
+def plot_n_scaling_forall_d(
+    data_by_d, data_by_n, configs, fitting_func, p0=[20, -0.1, 0.0], **plot_kwargs
+):
     for n, data in data_by_n.items():
         config = get_config_by_n(configs, n)
-        plt.plot(data["ds"], data["ys"], color=config.color, linestyle="-", label=config.label, **plot_kwargs)
+        plt.plot(
+            data["ds"],
+            data["ys"],
+            color=config.color,
+            linestyle="-",
+            label=config.label,
+            **plot_kwargs,
+        )
 
     predicted_data_by_n: Dict = defaultdict(lambda: {"ds": [], "ys": []})
     for d, data in data_by_d.items():
