@@ -163,8 +163,8 @@ def plot_step2(
     use_log_sigmoid=False,
     ax=plt.gca(),
 ):
-    fit_fn = log_sigmoid_fit if use_log_sigmoid else sigmoid_fit
-    grad_fit_fn = grad_log_sigmoid_fit if use_log_sigmoid else grad_sigmoid_fit
+    # fit_fn = log_sigmoid_fit if use_log_sigmoid else sigmoid_fit
+    # grad_fit_fn = grad_log_sigmoid_fit if use_log_sigmoid else grad_sigmoid_fit
 
     # std_errors = get_std_errors(
     #     plotted_predicted_data["xs"],
