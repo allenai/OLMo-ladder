@@ -495,7 +495,7 @@ def main():
     if args.output_path:
         os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
         fig.savefig(args.output_path, dpi=300)
-        df.to_csv(args.output_path.replace(".pdf", ".csv"), index=False)
+        df.to_csv(args.output_path.replace(".pdf", ".csv").replace(".png", ".csv"), index=False)
 
 
 if __name__ == "__main__":

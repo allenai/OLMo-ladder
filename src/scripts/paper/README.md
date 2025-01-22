@@ -24,12 +24,15 @@ TODO
 
 | Term | Definition |
 | ---- | ---------- |
-| Intermediate feature | |
-| BPB loss | | 
-| C4 loss | |
-| Chained prediction | |
+| Intermediate feature | The target metric used for step 1|
+| BPB loss | Task-specific bits-per-byte loss (See paper for description)| 
+| C4 loss | Validation loss on C4 set from PALOMa|
+| Chained prediction | Combined two-step prediction |
 | N | Number of model parameters |
 | D | Number of training tokens | 
+| F | Number of compute-FLOPs |
+| Moving average | The metrics are smoothened over a window |
+| Skip perc | First few evaluated steps are skipped |
 
 
 
@@ -40,24 +43,41 @@ Step 1 fits a power law from (N, D) to the target metric. We use the task bpb lo
 ```bash
 
 # target metric: task bpb loss
-python src/scripts/step1.py -k v2_main -c src/scripts/paper/configs/final.json -o src/scripts/paper/figures/step1_main.pdf --moving_avg 5
-
+python src/scripts/step1.py \
+    -k v2_main \
+    -c src/scripts/paper/configs/final.json \
+    -o src/scripts/paper/figures/step1_main.png \
+    --moving_avg 5
 ```
 
-![Step 1](figures/step1_main.pdf)
+![Step 1](figures/step1_main.png)
 
 
 ```bash
 # target metric: c4 loss
-python src/scripts/step1.py -k v2_main -c src/scripts/paper/configs/final.json -o src/scripts/paper/figures/step1_c4_main.pdf -y c4 --moving_avg 5
+python src/scripts/step1.py \
+    -k v2_main \
+    -c src/scripts/paper/configs/final.json \
+    -o src/scripts/paper/figures/step1_c4_main.pdf \
+    -y c4 \
+    --moving_avg 5
 
 # target metric: task accuracy
 
-python src/scripts/step1.py -k v2_main -c src/scripts/paper/configs/final.json -o src/scripts/paper/figures/step1_acc_main.pdf -y rc_acc --moving_avg 5
+python src/scripts/step1.py \
+    -k v2_main \
+    -c src/scripts/paper/configs/final.json \
+    -o src/scripts/paper/figures/step1_acc_main.pdf \
+    -y rc_acc \
+    --moving_avg 5
 
 
 # target metric: task ce loss
-python src/scripts/step1.py -k v2_main -c src/scripts/paper/configs/final.json -o src/scripts/paper/figures/step1_taskce_main.pdf -y rc_soft_log
+python src/scripts/step1.py \
+    -k v2_main \
+    -c src/scripts/paper/configs/final.json \
+    -o src/scripts/paper/figures/step1_taskce_main.pdf \
+    -y rc_soft_log
 ```
 
 
@@ -67,28 +87,56 @@ Step 2 fits a sigmoid function from the intermediate feature to the target metri
 
 ```bash
 # using task bpb loss as the intermediate feature
-python src/scripts/step2.py -k v2_main -c src/scripts/paper/configs/final.json -o src/scripts/paper/figures/step2_main.pdf --skip_perc 0.1 --moving_avg 5
+python src/scripts/step2.py \
+    -k v2_main \
+    -c src/scripts/paper/configs/final.json \
+    -o src/scripts/paper/figures/step2_main.png \
+    --skip_perc 0.1 \
+    --moving_avg 5
 ```
 
-![Step 2](figures/step2_main.pdf)
+![Step 2](figures/step2_main.png)
 
 
 ```bash
 # using c4 loss as the intermediate feature.
-python src/scripts/step2.py -k v2_main -c src/scripts/paper/configs/final.json -o src/scripts/paper/figures/step2_c4_main.pdf -x c4 --skip_perc 0.1 --moving_avg 5
+python src/scripts/step2.py \
+    -k v2_main \
+    -c src/scripts/paper/configs/final.json \
+    -o src/scripts/paper/figures/step2_c4_main.pdf \
+    -x c4 \
+    --skip_perc 0.1 \
+    --moving_avg 5
 
 # using task ce loss as the intermediate feature.
-python src/scripts/step2.py -k v2_main -c src/scripts/paper/configs/final.json -o src/scripts/paper/figures/step2_taskce_main.pdf -x rc_soft_log --skip_perc 0.5 --use_log_sigmoid
+python src/scripts/step2.py \
+    -k v2_main \
+    -c src/scripts/paper/configs/final.json \
+    -o src/scripts/paper/figures/step2_taskce_main.pdf \
+    -x rc_soft_log \
+    --skip_perc 0.5 \
+    --use_log_sigmoid
 ```
 
 
 ## Chained predictions
 
+The predict script takes the predicted output of step 1 as input for step 2 to give a combined prediction.
+
 ```bash
-python src/scripts/predict.py -k v2_main -c src/scripts/paper/configs/final.json --step2-config-path src/scripts/paper/configs/final.json -o src/scripts/paper/figures/chained_main.pdf -n 13202396160 -d 5000088518656 -t 13B-5T --skip_perc 0.1 --moving_avg 5
+python src/scripts/predict.py \
+    -k v2_main \
+    -c src/scripts/paper/configs/final.json \
+    --step2-config-path src/scripts/paper/configs/final.json \
+    -o src/scripts/paper/figures/chained_main.png \
+    -n 13202396160 \
+    -d 5000088518656 \
+    -t 13B-5T \
+    --skip_perc 0.1 \
+    --moving_avg 5
 ```
 
-![Chained](figures/chained_main.pdf)
+![Chained](figures/chained_main.png)
 
 
 TODO: add other chained preds
@@ -97,13 +145,17 @@ TODO: add other chained preds
 ## Variance analysis 
 
 ```bash
-python src/scripts/variance_analysis.py -k v2_main_variance -c src/scripts/paper/configs/final_variance.json -o src/scripts/paper/figures/variance.pdf --last_n_points 10 --run_prediction --print_table_as_latex
+python src/scripts/variance_analysis.py \
+    -k v2_main_variance \
+    -c src/scripts/paper/configs/final_variance.json \
+    -o src/scripts/paper/figures/variance.png \
+    --last_n_points 10 \
+    --run_prediction \
+    --print_table_as_latex
 ```
 
-![Variance Analysis](figures/variance.pdf)
+![Variance Analysis](figures/variance.png)
 
-```bash
-```
 
 5. Analyses (Flops vs error, N vs error, D vs error).
 
