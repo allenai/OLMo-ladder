@@ -3,11 +3,25 @@
 
 [Paper](https://arxiv.org/pdf/2412.04403)
 
-This guide shows how to fit scaling laws using the ladder training runs. For information on how to run ladder models, see [TODO](link).
+This guide shows how to fit scaling laws using the ladder training runs. For information on how to run ladder models, see [src/ladder/README.md](../../ladder/README.md).
 
-## Setup
+## Table of Contents
 
-### Installation
+- [Installation](#installation)
+- [Glossary](#glossary)
+- [Baseline ladder models](#baseline-ladder-models)
+- [Step 1](#step-1)
+- [Step 2](#step-2)
+- [Chained predictions](#chained-predictions)
+- [Variance analysis](#variance-analysis)
+- [Analyses & Alternative Design Choices](#analyses--alternative-design-choices)
+    - [Compute vs Prediction Error](#compute-vs-prediction-error)
+    - [Using C (FLOPs) instead of (N, D)](#using-c-flops-instead-of-n-d)
+    - [Predicting accuracy in a single step](#predicting-accuracy-in-a-single-step)
+    - [Predicting MC accuracy](#predicting-mc-accuracy)
+- [Citation](#citation)
+
+## Installation
 
 ```bash
 conda create -n ladder python=3.10
@@ -34,6 +48,10 @@ TODO
 | Moving average | The metrics are smoothened over a window |
 | Skip perc | First few evaluated steps are skipped |
 
+
+## Baseline ladder models
+
+TODO: Upload models (and checkpoints) to HF, link them here.
 
 
 ## Step 1
@@ -213,7 +231,7 @@ python src/scripts/single_step.py \
 
 ### Predicting MC accuracy
 
-
+TODO
 
 
 ## Citation
