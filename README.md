@@ -21,7 +21,7 @@ The OLMo-ladder is a set of scripts and model configurations for fitting scaling
 conda create -n ladder python=3.10
 conda activate ladder
 cd OLMo-ladder
-pip install -e ".[all]"  # options include plotting, beaker, wandb, dev, olmo
+pip install -e ".[all]"  # options include plotting, beaker, wandb, dev, ladder
 ```
 
 ## Running the ladder
@@ -33,7 +33,6 @@ See [src/ladder](src/ladder/README.md) for instructions on running the ladder mo
     TODO: New named eval sets
     TODO: variance analysis when you add a new eval
     TODO: backfilling evals existing models
-    TODO: can we make evals more efficient? 
 
 ## Scaling laws for modeling (eg. hyperparameters, modeling config changes, etc.)
 

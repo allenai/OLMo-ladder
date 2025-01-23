@@ -23,6 +23,7 @@ dependencies = [
     "safetensors",
     "importlib_resources",
     "scipy",
+    "scikit-learn"
 ]
 
 [project.urls]
@@ -52,8 +53,10 @@ dev = [
     "sphinx-autobuild==2021.3.14",
     "sphinx-autodoc-typehints==1.23.3",
 ]
-olmo = [
+ladder = [
     "ai2-olmo>=v0.6.0",
+    "datasets",
+    "torchmetrics",
 ]
 beaker = [
     "beaker-py",
@@ -67,7 +70,7 @@ plotting = [
     "seaborn",
 ]
 all = [
-    "ladder[dev,beaker,wandb,plotting,olmo]",
+    "ladder[dev,beaker,wandb,plotting,ladder]",
 ]
 
 [tool.setuptools]
