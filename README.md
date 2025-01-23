@@ -1,7 +1,9 @@
 
 # OLMo-ladder
 
-The OLMo-ladder is a set of scripts and model configurations for fitting scaling laws on smaller models, to take modeling or data-mixing decisions for pretraining.
+The OLMo-ladder is a set of scripts and model configurations for fitting scaling laws on smaller models, to take modeling or data-mixing decisions for pretraining. 
+
+For details on reproducing results from the [paper](https://arxiv.org/pdf/2412.04403), please see [src/scripts/paper](src/scripts/paper/README.md).
 
 ## Table of Contents
 
@@ -26,34 +28,30 @@ pip install -e ".[all]"  # options include plotting, beaker, wandb, dev, ladder
 
 ## Running the ladder
 
-See [src/ladder](src/ladder/README.md) for instructions on running the ladder models.
+See [src/ladder](src/ladder/README.md) for instructions on running the ladder models. 
+Instructions for adding new evaluation sets can also be found there.
 
-## Adding new evals
 
-    TODO: New named eval sets
-    TODO: variance analysis when you add a new eval
-    TODO: backfilling evals existing models
+## Scaling laws for modeling decisions
 
-## Scaling laws for modeling (eg. hyperparameters, modeling config changes, etc.)
+Scaling laws can be fitted for taking modeling decisions, such as specific configuration changes, hyperparameter choices, etc.
 
-    TODO: adding new model configurations
-    TODO: modeling code changes, eg. muP.
-    TODO: add to examples folder?
+* [WSD ladder](README.md)
+* [muP ladder](README.md)
 
-## Scaling laws for data
+TODO: links
 
-    TODO: describe method
-    TODO: add to examples folder
+## Scaling laws for data decisions
+
+TODO: add link to Ian's work.
 
 ## Miscellaneous
 
     Downloading W&B results.
-    TODO: Downloading comet results.
+    TODO: Add comet.
 
 
 ## Citation
-
-For more details on reproducing results from the [paper](https://arxiv.org/pdf/2412.04403), please see [src/scripts/paper](src/scripts/paper/README.md).
 
 ```
 @article{Bhagia2024EstablishingTS,
