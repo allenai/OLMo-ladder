@@ -43,7 +43,7 @@ TODO: links
 
 ## Scaling laws for data decisions
 
-TODO: add link to Ian's work.
+TODO: David / Ian to provide recommendations based on combining Ian's ranking work with scaling laws.
 
 ## Miscellaneous
 
