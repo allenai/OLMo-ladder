@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from step1_flops import fit_step1
-from step2 import fit_step2
-from step2_mc import fit_step2 as fit_step2_mc
+from fitting.step1_flops import fit_step1
+from fitting.step2 import fit_step2
+from fitting.step2_mc import fit_step2 as fit_step2_mc
 
-from scaling.fitting_functions import chinchilla_flops_fit, log_sigmoid, sigmoid
+from scaling.fitting_functions import chinchilla_flops_fit, chinchilla_flops_2_param_fit, log_sigmoid, sigmoid
 from scaling.utils import (
     get_final_configs,
     get_step1_data_by_name,
@@ -97,43 +97,75 @@ def parse_args():
     return args
 
 
-def predict_chained_flops(data_by_name, step1_coefficients, step2_coefficients):
+def predict_chained_flops(data_by_name, step1_coefficients, step2_coefficients, use_two_param=False, extrapolate_ratio=[0.8, 1.5]):
     predicted_data_by_name = {}
     plotted_predicted_data_by_name = {}
 
-    fmin = 0.8 * min([min(data["fs"]) for data in data_by_name.values()])
-    fmax = 1.5 * max([max(data["fs"]) for data in data_by_name.values()])
+    y, y_pred,rel_error = 0, 0, 0
 
-    for name, data in data_by_name.items():
-        predicted_data_by_name[name] = {
-            "fs": data["fs"],
-            "ys": [
-                sigmoid(chinchilla_flops_fit(f, step1_coefficients), *step2_coefficients)
-                for f in data["fs"]
-            ],
-        }
-        fs = np.exp(np.linspace(np.log(fmin), np.log(fmax), 100))
-        plotted_predicted_data_by_name[name] = {
-            "fs": fs,
-            "ys": [
-                sigmoid(chinchilla_flops_fit(f, step1_coefficients), *step2_coefficients)
-                for f in fs
-            ],
-        }
+    er_min, er_max = extrapolate_ratio
 
-        if data["mode"] == "eval":
-            predicted_data = predicted_data_by_name[name]
-            for f, y, y_pred in zip(data["fs"], data["xs"], predicted_data["ys"]):
-                rel_error = (y_pred - y) / y
+    fmin = er_min * min([min(data["fs"]) for data in data_by_name.values()])
+    fmax = er_max * max([max(data["fs"]) for data in data_by_name.values()])
+
+    if use_two_param:
+        for name, data in data_by_name.items():
+            predicted_data_by_name[name] = {
+                "fs": data["fs"],
+                "ys": [
+                    sigmoid(chinchilla_flops_2_param_fit(f, step1_coefficients), *step2_coefficients)
+                    for f in data["fs"]
+                ],
+            }
+            fs = np.exp(np.linspace(np.log(fmin), np.log(fmax), 100))
+            plotted_predicted_data_by_name[name] = {
+                "fs": fs,
+                "ys": [
+                    sigmoid(chinchilla_flops_2_param_fit(f, step1_coefficients), *step2_coefficients)
+                    for f in fs
+                ],
+            }
+
+            if data["mode"] == "eval":
+                predicted_data = predicted_data_by_name[name]
+                for f, y, y_pred in zip(data["fs"], data["ys"], predicted_data["ys"]):
+                    rel_error = (y_pred - y) / y
+
+    else:
+        for name, data in data_by_name.items():
+            predicted_data_by_name[name] = {
+                "fs": data["fs"],
+                "ys": [
+                    sigmoid(chinchilla_flops_fit(f, step1_coefficients), *step2_coefficients)
+                    for f in data["fs"]
+                ],
+            }
+            fs = np.exp(np.linspace(np.log(fmin), np.log(fmax), 100))
+            plotted_predicted_data_by_name[name] = {
+                "fs": fs,
+                "ys": [
+                    sigmoid(chinchilla_flops_fit(f, step1_coefficients), *step2_coefficients)
+                    for f in fs
+                ],
+            }
+
+            if data["mode"] == "eval":
+                predicted_data = predicted_data_by_name[name]
+                for f, y, y_pred in zip(data["fs"], data["ys"], predicted_data["ys"]):
+                    rel_error = (y_pred - y) / y
 
     return predicted_data_by_name, plotted_predicted_data_by_name, (y, y_pred, rel_error)
 
 
 def str_chained_fit(step1_coefficients, step2_coefficients):
-    a, alpha, E = step1_coefficients
-    A = np.exp(a)
-    a, x0, k, b = step2_coefficients
-    return f"L(F) = {A:.2f} / F^{alpha:.2f} + {E:.2f}; Acc(L) = {a:.2f} / (1 + e^(-{k:.2f}(L - {x0:.2f}))) + {b:.2f}"
+    try:
+        a, alpha, E = step1_coefficients
+        A = np.exp(a)
+        a, x0, k, b = step2_coefficients
+        return f"L(F) = {A:.2f} / F^{alpha:.2f} + {E:.2f}; Acc(L) = {a:.2f} / (1 + e^(-{k:.2f}(L - {x0:.2f}))) + {b:.2f}"
+    except Exception as e:
+        # If there are alternative formulations, don't display the equation here
+        return "TODO: add function to str_chained_fit()"
 
 
 def plot_chained(
@@ -153,14 +185,14 @@ def plot_chained(
             data["ys"],
             color=config.color,
             linestyle="--",
-            alpha=0.7,
-            linewidth=1.5,
+            alpha=0.7 if config.color != 'grey' else 0.1,
+            linewidth=0.5,
             label=f"{config.label} (fitted)" if config.mode == "train" else None,
         )
 
     # plot the actual and predicted data
     num_eval_annotation = 0
-    for name, data in data_by_name.items():
+    for size_idx, (name, data) in enumerate(data_by_name.items()):
         config = configs[name]
         predicted_data = predicted_data_by_name[name]
 
@@ -169,8 +201,9 @@ def plot_chained(
                 f,
                 y,
                 color=config.color,
-                marker=MARKERS[i] if config.mode == "train" else "o",
-                s=50 if config.mode == "train" else 20,
+                alpha=0.7 if config.color != 'grey' else 0.1,
+                marker=MARKERS[size_idx] if config.mode == "train" else "o",
+                s=20 if config.mode == "train" else 20,
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
             )
 
@@ -183,6 +216,7 @@ def plot_chained(
                     f,
                     y_pred,
                     color=config.color,
+                    alpha=0.7 if config.color != 'grey' else 0.1,
                     marker="x",
                     s=20,
                     label=f"{config.label} (predicted)",
@@ -203,8 +237,9 @@ def plot_chained(
     ax.legend(loc="upper right", ncols=1, fontsize=FONTSIZE)
     ax.set_xlabel("FLOPs (C)", fontsize=FONTSIZE)
     ax.set_ylabel("Task RC accuracy", fontsize=FONTSIZE)
+    display_name = tasks[task_name].display_name if task_name in tasks else task_name
     ax.set_title(
-        f"{tasks[task_name].display_name}",
+        f"{display_name}",
         fontsize=FONTSIZE,
         fontweight="bold",
     )

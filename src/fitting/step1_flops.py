@@ -10,6 +10,8 @@ from scaling.fitting_functions import (
     chinchilla_flops_fit,
     get_coefficients_huber,
     grad_chinchilla_flops_fit,
+    chinchilla_flops_2_param_fit,
+    grad_chinchilla_flops_2_param_fit,
 )
 from scaling.utils import (
     get_final_configs,
@@ -43,7 +45,7 @@ def parse_args():
     return args
 
 
-def fit_step1(data_by_name, y_metric):
+def fit_step1(data_by_name, y_metric, use_two_param=False):
     train_fs, train_xs = [], []
     for name, data in data_by_name.items():
         if data["mode"] == "train":
@@ -51,13 +53,23 @@ def fit_step1(data_by_name, y_metric):
             train_xs += data["xs"]
 
     if y_metric == "rc_bpb":
-        p0 = [3.0, 0.1, 1.0]
-        bounds = [(0, None), (0, 1.0), (0, None)]
+        if use_two_param:
+            p0 = [10.0, 0.4] # initalization for 2 param fit
+            bounds = [(0, None), (0, 1.0)]
+        else:
+            p0 = [10.0, 0.4, 0.5]
+            bounds = [(0, None), (0, 1.0), (0, None)]
+
+        if use_two_param:
+            fit_f, fit_grad = chinchilla_flops_2_param_fit, grad_chinchilla_flops_2_param_fit
+        else:
+            fit_f, fit_grad = chinchilla_flops_fit, grad_chinchilla_flops_fit
+
         coefficients, cov = get_coefficients_huber(
             train_fs,
             train_xs,
-            chinchilla_flops_fit,
-            grad_chinchilla_flops_fit,
+            fit_f,
+            fit_grad,
             p0=p0,
             bounds=bounds,
             max_iter=1000000,
@@ -81,17 +93,21 @@ def scale_data_by_name(data_by_name):
     return data_by_name
 
 
-def predict_step1(configs, data_by_name, coefficients, y_metric):
+def predict_step1(configs, data_by_name, coefficients, y_metric, use_two_param=False):
     predicted_data_by_name = {}
     plotted_predicted_data_by_name = {}
 
     unsigned_rel_errors = []
+    rel_error = float('inf')
 
     fmin = 0.8 * min([min(data["fs"]) for data in data_by_name.values()])
     fmax = 1.5 * max([max(data["fs"]) for data in data_by_name.values()])
 
     if y_metric == "rc_bpb":
-        func = chinchilla_flops_fit
+        if use_two_param:
+            func = chinchilla_flops_2_param_fit
+        else:
+            func = chinchilla_flops_fit
     elif y_metric == "rc_acc":
         func = chinchilla_flops_fit
     else:
@@ -127,9 +143,14 @@ def predict_step1(configs, data_by_name, coefficients, y_metric):
 
 
 def str_chinchilla_flops_fit(coefficients):
-    a, alpha, E = coefficients
-    A = np.exp(a)
-    return f"L(F) = {A:.2f} / F^{alpha:.2f} + {E:.2f}"
+    if len(coefficients) == 3:
+        a, alpha, E = coefficients
+        A = np.exp(a)
+        return f"L(F) = {A:.2f} / F^{alpha:.2f} + {E:.2f}"
+    elif len(coefficients) == 2:
+        a, alpha = coefficients
+        A = np.exp(a)
+        return f"L(F) = {A:.2f} / F^{alpha:.2f}"
 
 
 def plot_step1(
@@ -173,10 +194,10 @@ def plot_step1(
         ax.plot(
             data["fs"],
             data["xs"],
-            color="black",
-            linestyle="--",
-            alpha=0.7,
-            linewidth=1.5,
+            color=config.color,
+            linestyle="-",
+            alpha=0.5,
+            linewidth=1,
             # label=f'{config.label} ({"fitted" if config.mode == "train" else "predicted"})',
         )
         break
@@ -184,7 +205,7 @@ def plot_step1(
     # plot the actual and predicted data
     unsigned_rel_errors = []
     num_eval_annotation = 0
-    for name, data in data_by_name.items():
+    for size_idx, (name, data) in enumerate(data_by_name.items()):
         config = configs[name]
         predicted_data = predicted_data_by_name[name]
 
@@ -193,8 +214,8 @@ def plot_step1(
                 f,
                 y,
                 color=config.color,
-                marker=MARKERS[i] if config.mode == "train" else "o",
-                s=50 if config.mode == "train" else 20,
+                marker=MARKERS[size_idx] if config.mode == "train" else "o",
+                s=20 if config.mode == "train" else 20,
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
             )
 
@@ -225,7 +246,7 @@ def plot_step1(
     avg_unsigned_rel_error = np.mean(unsigned_rel_errors)
 
     ax.set_xscale("log")
-    ax.legend(loc="upper right", ncols=1, fontsize=FONTSIZE)
+    ax.legend(loc="lower left", ncols=1, fontsize=FONTSIZE)
     ax.set_xlabel("Flops (C)", fontsize=FONTSIZE)
     if y_metric == "rc_bpb":
         ax.set_ylabel("Task loss", fontsize=FONTSIZE)
@@ -233,8 +254,9 @@ def plot_step1(
         ax.set_ylabel("Task RC accuracy", fontsize=FONTSIZE)
     else:
         raise ValueError(f"Unknown y_metric: {y_metric}")
+    display_name = tasks[task_name].display_name if task_name in tasks else task_name
     ax.set_title(
-        f"{tasks[task_name].display_name} ({avg_unsigned_rel_error * 100:.2f}%)",
+        f"{display_name} ({avg_unsigned_rel_error * 100:.2f}%)",
         fontsize=FONTSIZE,
         fontweight="bold",
     )

@@ -200,7 +200,8 @@ def plot_step1(
         config = configs[name]
         predicted_data = predicted_data_by_name[name]
 
-        for i, (d, x, ln) in enumerate(zip(data["ds"], data["xs"], data["ls"])):
+        lns = data.get("ls", ["o"] * len(data["ds"]))
+        for i, (d, x, ln) in enumerate(zip(data["ds"], data["xs"], lns)):
             ax.scatter(
                 d,
                 x,

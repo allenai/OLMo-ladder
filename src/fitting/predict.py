@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from step1 import fit_step1
-from step2 import fit_step2
-from step2_mc import fit_step2 as fit_step2_mc
+from fitting.step1 import fit_step1
+from fitting.step2 import fit_step2
+from fitting.step2_mc import fit_step2 as fit_step2_mc
 
 from scaling.fitting_functions import chinchilla_n_d_fit, log_sigmoid, sigmoid
 from scaling.utils import (
@@ -144,7 +144,7 @@ def plot_chained(
             data["ys"],
             color=config.color,
             linestyle="--",
-            alpha=0.7,
+            alpha=0.7 if config.color != 'grey' else 0.3,
             linewidth=1.5,
             label=f"{config.label} (fitted)" if config.mode == "train" else None,
         )
@@ -155,7 +155,8 @@ def plot_chained(
         config = configs[name]
         predicted_data = predicted_data_by_name[name]
 
-        for i, (d, y, ln) in enumerate(zip(data["ds"], data["xs"], data["ls"])):
+        lns = data.get("ls", ["o"] * len(data["ds"]))
+        for i, (d, y, ln) in enumerate(zip(data["ds"], data["xs"], lns)):  
             ax.scatter(
                 d,
                 y,
