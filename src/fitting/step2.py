@@ -143,6 +143,8 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
 
     unsigned_rel_errors = []
 
+    e_y, e_y_pred, rel_error, delta_error = float('-inf'), float('-inf'), float('-inf'), float('-inf')
+
     predicted_data_by_name = {}
     for name, data in data_by_name.items():
         config = configs[name]
