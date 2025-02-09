@@ -340,7 +340,7 @@ def plot_step2(
 
     ylim = ax.get_ylim()
     ax.set_ylim(ylim[0], min(1.0, ylim[1]))
-    display_name = tasks[task_name].display_name if task_name in tasks else task_name
+    display_name = tasks[task_name].display_name if isinstance(task_name, str) and task_name in tasks else task_name
     ax.set_title(
         f"{display_name} (Fitting error: {avg_unsigned_rel_err * 100:.2f}%)",
         fontsize=FONTSIZE,

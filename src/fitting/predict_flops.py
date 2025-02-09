@@ -237,7 +237,7 @@ def plot_chained(
     ax.legend(loc="upper right", ncols=1, fontsize=FONTSIZE)
     ax.set_xlabel("FLOPs (C)", fontsize=FONTSIZE)
     ax.set_ylabel("Task RC accuracy", fontsize=FONTSIZE)
-    display_name = tasks[task_name].display_name if task_name in tasks else task_name
+    display_name = tasks[task_name].display_name if isinstance(task_name, str) and task_name in tasks else task_name
     ax.set_title(
         f"{display_name}",
         fontsize=FONTSIZE,

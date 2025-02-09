@@ -245,7 +245,7 @@ def plot_single_step(
     ax.legend(loc="upper right", ncols=1, fontsize=FONTSIZE)
     ax.set_xlabel("Tokens (D)", fontsize=FONTSIZE)
     ax.set_ylabel("Task RC accuracy", fontsize=FONTSIZE)
-    display_name = tasks[task_name].display_name if task_name in tasks else task_name
+    display_name = tasks[task_name].display_name if isinstance(task_name, str) and task_name in tasks else task_name
     ax.set_title(
         f"{display_name} ({avg_unsigned_rel_error * 100:.2f}%)",
         fontsize=FONTSIZE,

@@ -254,7 +254,7 @@ def plot_step1(
         ax.set_ylabel("Task RC accuracy", fontsize=FONTSIZE)
     else:
         raise ValueError(f"Unknown y_metric: {y_metric}")
-    display_name = tasks[task_name].display_name if task_name in tasks else task_name
+    display_name = tasks[task_name].display_name if isinstance(task_name, str) and task_name in tasks else task_name
     ax.set_title(
         f"{display_name} ({avg_unsigned_rel_error * 100:.2f}%)",
         fontsize=FONTSIZE,
