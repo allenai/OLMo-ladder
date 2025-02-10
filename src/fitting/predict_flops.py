@@ -114,7 +114,7 @@ def predict_chained_flops(
     predicted_data_by_name = {}
     plotted_predicted_data_by_name = {}
 
-    y, y_pred, rel_error = 0, 0, 0
+    y, y_pred, rel_error = 0.0, 0.0, 0.0
 
     er_min, er_max = extrapolate_ratio
 

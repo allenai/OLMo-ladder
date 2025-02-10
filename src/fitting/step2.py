@@ -4,6 +4,7 @@
 
 import argparse
 import warnings
+import typing
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -96,6 +97,8 @@ def fit_step2(
         else:
             raise ValueError(f"Unknown y_metric: {y_metric}")
 
+    inital_bounds: list
+    fit_function: typing.Callable
     if use_log_sigmoid:
         p0s = [[-0.1, 0.9, 3.0]]
         inital_bounds = [([-np.inf, 0.0, 0.0], [0.0, np.inf, np.inf])]

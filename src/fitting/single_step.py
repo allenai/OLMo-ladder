@@ -43,8 +43,9 @@ def parse_args():
 
 
 def fit_single_step(data_by_name, task_name, use_flops=False):
-    train_nds, train_fs, train_ys = [], [], []
-    train_nds, train_ys = [], []
+    train_nds: list = []
+    train_fs: list = []
+    train_ys: list = []
     for name, data in data_by_name.items():
         if data["mode"] == "train":
             train_nds += [[n, d] for n, d in zip(data["ns"], data["ds"])]
@@ -53,6 +54,7 @@ def fit_single_step(data_by_name, task_name, use_flops=False):
 
     task_min = tasks[task_name].task_minimum if task_name in tasks else 0
 
+    bounds: list
     if use_flops:
         p0s = [
             # The starting point for FLOPs can be tricky to get right, so we iteratively try
