@@ -4,12 +4,12 @@
 
 import argparse
 import warnings
-from scipy.optimize import OptimizeWarning
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from scipy.optimize import OptimizeWarning
 
 from scaling.fitting_functions import (
     get_coefficients,
@@ -62,7 +62,15 @@ def parse_args():
     return args
 
 
-def fit_step2(data_by_name, task_name, y_metric=None, _min=None, _max=None, use_log_sigmoid=False, use_helper_points=True):
+def fit_step2(
+    data_by_name,
+    task_name,
+    y_metric=None,
+    _min=None,
+    _max=None,
+    use_log_sigmoid=False,
+    use_helper_points=True,
+):
     train_xs, train_ys = [], []
     for name, data in data_by_name.items():
         if data["mode"] == "train":
@@ -72,9 +80,9 @@ def fit_step2(data_by_name, task_name, y_metric=None, _min=None, _max=None, use_
             data["xs"] = data["xs"][-1:]
             data["ys"] = data["ys"][-1:]
 
-    if _max is None: 
+    if _max is None:
         _max = tasks[task_name].task_maximum if task_name in tasks else 1
-    if _min is None: 
+    if _min is None:
         _min = tasks[task_name].task_minimum if task_name in tasks else 0
 
     # add ideal points (these are not plotted)
@@ -106,8 +114,8 @@ def fit_step2(data_by_name, task_name, y_metric=None, _min=None, _max=None, use_
             [-2.7, 1.4, 3.2, 1.3],
             [-0.09, 0.6, 6.5, 0.1],
             [-0.64, -0.41, 12.7, 1.05],
-            [-2.15771768e-02, 1.39273020e+00, -5.85129498e+01, 4.54084320e-01],
-            [-1.60006552e+00, 1.36001561e+00, -4.95252012e+02, 4.10217043e-01]
+            [-2.15771768e-02, 1.39273020e00, -5.85129498e01, 4.54084320e-01],
+            [-1.60006552e00, 1.36001561e00, -4.95252012e02, 4.10217043e-01],
         ]
         inital_bounds = [([-1.0, 0.0, 0.0, 0.0], [0.0, np.inf, np.inf, 1.0])]
         fit_function = sigmoid
@@ -122,26 +130,35 @@ def fit_step2(data_by_name, task_name, y_metric=None, _min=None, _max=None, use_
             try:
                 if try_bounds is not None:
                     coefficients, cov = get_coefficients(
-                        train_xs, train_ys, fit_function, p0=try_p0,
-                        bounds=try_bounds, disp=False, return_cov=True,
+                        train_xs,
+                        train_ys,
+                        fit_function,
+                        p0=try_p0,
+                        bounds=try_bounds,
+                        disp=False,
+                        return_cov=True,
                     )
                 else:
                     coefficients, cov = get_coefficients(
-                        train_xs, train_ys, fit_function, p0=try_p0,
-                        disp=False, return_cov=True,
+                        train_xs,
+                        train_ys,
+                        fit_function,
+                        p0=try_p0,
+                        disp=False,
+                        return_cov=True,
                     )
 
                 # Check if an OptimizeWarning was raised
                 if not any(issubclass(warning.category, OptimizeWarning) for warning in w):
                     # print(task_name, coefficients)
                     return coefficients, cov
-            except RuntimeError as e:
-                print(f'Optimization error for step 2 on {task_name}')
+            except RuntimeError:
+                print(f"Optimization error for step 2 on {task_name}")
                 pass
 
             try_idx += 1
 
-    print(f'Failed to optimize step 2 on {task_name}')
+    print(f"Failed to optimize step 2 on {task_name}")
 
     return coefficients, cov
 
@@ -153,7 +170,12 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
 
     unsigned_rel_errors = []
 
-    e_y, e_y_pred, rel_error, delta_error = float('-inf'), float('-inf'), float('-inf'), float('-inf')
+    e_y, e_y_pred, rel_error, delta_error = (
+        float("-inf"),
+        float("-inf"),
+        float("-inf"),
+        float("-inf"),
+    )
 
     predicted_data_by_name = {}
     for name, data in data_by_name.items():
@@ -262,7 +284,7 @@ def plot_step2(
                     s=20,
                     label=f"{config.label} ({'target'})",
                 )
-                if config.label in ['7B-4T', '13B-5T']:
+                if config.label in ["7B-4T", "13B-5T"]:
                     ax.scatter(
                         x,
                         y_pred,
@@ -271,7 +293,7 @@ def plot_step2(
                         s=20,
                         label=f"{config.label} ({'predicted'})",
                     )
-                    if rel_error != float('inf'):
+                    if rel_error != float("inf"):
                         ax.annotate(
                             f"{np.abs(rel_error) * 100:.1f}%",
                             (x, y),
@@ -284,9 +306,9 @@ def plot_step2(
                         )
                         num_eval_annotation += 1
                 if add_texts:
-                    texts += [ax.text(
-                        x, y, config.label, fontsize=6, alpha=0.8, ha='center', va='center'
-                    )]
+                    texts += [
+                        ax.text(x, y, config.label, fontsize=6, alpha=0.8, ha="center", va="center")
+                    ]
                 else:
                     pass
     avg_unsigned_rel_err = np.mean(unsigned_rel_errs)
@@ -351,7 +373,11 @@ def plot_step2(
 
     ylim = ax.get_ylim()
     ax.set_ylim(ylim[0], min(1.0, ylim[1]))
-    display_name = tasks[task_name].display_name if isinstance(task_name, str) and task_name in tasks else task_name
+    display_name = (
+        tasks[task_name].display_name
+        if isinstance(task_name, str) and task_name in tasks
+        else task_name
+    )
     ax.set_title(
         f"{display_name} (Fitting error: {avg_unsigned_rel_err * 100:.2f}%)",
         fontsize=FONTSIZE,

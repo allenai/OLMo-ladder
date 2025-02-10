@@ -124,7 +124,11 @@ def _plot_single_variance_analysis(
     ax1.legend(loc="upper right", ncols=1, fontsize=FONTSIZE)
     ax1.set_xlabel("Tokens (D)", fontsize=FONTSIZE)
     ax1.set_ylabel("Task loss", fontsize=FONTSIZE)
-    display_name = tasks[task_name].display_name if isinstance(task_name, str) and task_name in tasks else task_name
+    display_name = (
+        tasks[task_name].display_name
+        if isinstance(task_name, str) and task_name in tasks
+        else task_name
+    )
     ax1.set_title(
         f"{display_name}\n" + r"(Loss relative SD$_{10}$: " + f"{loss_coeff_of_var*100:.2f}%)",
         fontsize=FONTSIZE,
@@ -158,7 +162,11 @@ def _plot_single_variance_analysis(
     ax2.legend(loc="upper right", ncols=1, fontsize=10)
     ax2.set_xlabel("Task loss", fontsize=FONTSIZE)
     ax2.set_ylabel("Task RC accuracy", fontsize=FONTSIZE)
-    display_name = tasks[task_name].display_name if isinstance(task_name, str) and task_name in tasks else task_name
+    display_name = (
+        tasks[task_name].display_name
+        if isinstance(task_name, str) and task_name in tasks
+        else task_name
+    )
     ax2.set_title(
         f"{display_name}\n" + r"(Accuracy relative SD$_{10}$: " + f"{acc_coeff_of_var*100:.2f}%)",
         fontsize=FONTSIZE,
@@ -450,18 +458,20 @@ def print_table(df, last_n_points, print_table_as_latex=False):
             if "CV" in col:
                 mean = means[col]
                 colored_df[col] = df[col].apply(
-                    lambda x: f"\033[91m{x*100:>10.2f}%\033[0m"
-                    if x > mean
-                    else f"\033[92m{x*100:>10.2f}%\033[0m"
+                    lambda x: (
+                        f"\033[91m{x*100:>10.2f}%\033[0m"
+                        if x > mean
+                        else f"\033[92m{x*100:>10.2f}%\033[0m"
+                    )
                 )
             elif "Error" in col:
                 colored_df[col] = df[col].apply(lambda x: f"\033[0m{abs(x)*100:>10.2f}%\033[0m")
             else:
                 mean = means[col]
                 colored_df[col] = df[col].apply(
-                    lambda x: f"\033[91m{x:>10.4f}\033[0m"
-                    if x > mean
-                    else f"\033[92m{x:>10.4f}\033[0m"
+                    lambda x: (
+                        f"\033[91m{x:>10.4f}\033[0m" if x > mean else f"\033[92m{x:>10.4f}\033[0m"
+                    )
                 )
 
         print(colored_df.to_string(justify="left", header=False))

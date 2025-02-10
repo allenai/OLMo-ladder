@@ -6,11 +6,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+
 from fitting.step1_flops import fit_step1
 from fitting.step2 import fit_step2
 from fitting.step2_mc import fit_step2 as fit_step2_mc
-
-from scaling.fitting_functions import chinchilla_flops_fit, chinchilla_flops_negated_fit, chinchilla_flops_2_param_fit, log_sigmoid, sigmoid
+from scaling.fitting_functions import (
+    chinchilla_flops_2_param_fit,
+    chinchilla_flops_fit,
+    chinchilla_flops_negated_fit,
+    log_sigmoid,
+    sigmoid,
+)
 from scaling.utils import (
     get_final_configs,
     get_step1_data_by_name,
@@ -97,11 +103,18 @@ def parse_args():
     return args
 
 
-def predict_chained_flops(data_by_name, step1_coefficients, step2_coefficients, y_metric=None, use_two_param=False, extrapolate_ratio=[0.8, 1.5]):
+def predict_chained_flops(
+    data_by_name,
+    step1_coefficients,
+    step2_coefficients,
+    y_metric=None,
+    use_two_param=False,
+    extrapolate_ratio=[0.8, 1.5],
+):
     predicted_data_by_name = {}
     plotted_predicted_data_by_name = {}
 
-    y, y_pred,rel_error = 0, 0, 0
+    y, y_pred, rel_error = 0, 0, 0
 
     er_min, er_max = extrapolate_ratio
 
@@ -113,7 +126,9 @@ def predict_chained_flops(data_by_name, step1_coefficients, step2_coefficients, 
             predicted_data_by_name[name] = {
                 "fs": data["fs"],
                 "ys": [
-                    sigmoid(chinchilla_flops_2_param_fit(f, step1_coefficients), *step2_coefficients)
+                    sigmoid(
+                        chinchilla_flops_2_param_fit(f, step1_coefficients), *step2_coefficients
+                    )
                     for f in data["fs"]
                 ],
             }
@@ -121,7 +136,9 @@ def predict_chained_flops(data_by_name, step1_coefficients, step2_coefficients, 
             plotted_predicted_data_by_name[name] = {
                 "fs": fs,
                 "ys": [
-                    sigmoid(chinchilla_flops_2_param_fit(f, step1_coefficients), *step2_coefficients)
+                    sigmoid(
+                        chinchilla_flops_2_param_fit(f, step1_coefficients), *step2_coefficients
+                    )
                     for f in fs
                 ],
             }
@@ -132,13 +149,18 @@ def predict_chained_flops(data_by_name, step1_coefficients, step2_coefficients, 
                     rel_error = (y_pred - y) / y
 
     else:
-        if y_metric == "rc_bpb" or y_metric == "c4" or y_metric == "rc_soft_log" or y_metric is None:
+        if (
+            y_metric == "rc_bpb"
+            or y_metric == "c4"
+            or y_metric == "rc_soft_log"
+            or y_metric is None
+        ):
             step_1_fn = chinchilla_flops_fit
         elif y_metric == "rc_acc":
             step_1_fn = chinchilla_flops_negated_fit
         else:
             raise ValueError(f"Unknown y_metric: {y_metric}")
-        
+
         step_2_fn = sigmoid
 
         for name, data in data_by_name.items():
@@ -153,8 +175,7 @@ def predict_chained_flops(data_by_name, step1_coefficients, step2_coefficients, 
             plotted_predicted_data_by_name[name] = {
                 "fs": fs,
                 "ys": [
-                    step_2_fn(step_1_fn(f, step1_coefficients), *step2_coefficients)
-                    for f in fs
+                    step_2_fn(step_1_fn(f, step1_coefficients), *step2_coefficients) for f in fs
                 ],
             }
 
@@ -172,7 +193,7 @@ def str_chained_fit(step1_coefficients, step2_coefficients):
         A = np.exp(a)
         a, x0, k, b = step2_coefficients
         return f"L(F) = {A:.2f} / F^{alpha:.2f} + {E:.2f}; Acc(L) = {a:.2f} / (1 + e^(-{k:.2f}(L - {x0:.2f}))) + {b:.2f}"
-    except Exception as e:
+    except Exception:
         # If there are alternative formulations, don't display the equation here
         return "TODO: add function to str_chained_fit()"
 
@@ -194,7 +215,7 @@ def plot_chained(
             data["ys"],
             color=config.color,
             linestyle="--",
-            alpha=0.7 if config.color != 'grey' else 0.1,
+            alpha=0.7 if config.color != "grey" else 0.1,
             linewidth=0.5,
             label=f"{config.label} (fitted)" if config.mode == "train" else None,
         )
@@ -210,7 +231,7 @@ def plot_chained(
                 f,
                 y,
                 color=config.color,
-                alpha=0.7 if config.color != 'grey' else 0.1,
+                alpha=0.7 if config.color != "grey" else 0.1,
                 marker=MARKERS[size_idx] if config.mode == "train" else "o",
                 s=20 if config.mode == "train" else 20,
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
@@ -225,7 +246,7 @@ def plot_chained(
                     f,
                     y_pred,
                     color=config.color,
-                    alpha=0.7 if config.color != 'grey' else 0.1,
+                    alpha=0.7 if config.color != "grey" else 0.1,
                     marker="x",
                     s=20,
                     label=f"{config.label} (predicted)",
@@ -246,7 +267,11 @@ def plot_chained(
     ax.legend(loc="upper right", ncols=1, fontsize=FONTSIZE)
     ax.set_xlabel("FLOPs (C)", fontsize=FONTSIZE)
     ax.set_ylabel("Task RC accuracy", fontsize=FONTSIZE)
-    display_name = tasks[task_name].display_name if isinstance(task_name, str) and task_name in tasks else task_name
+    display_name = (
+        tasks[task_name].display_name
+        if isinstance(task_name, str) and task_name in tasks
+        else task_name
+    )
     ax.set_title(
         f"{display_name}",
         fontsize=FONTSIZE,

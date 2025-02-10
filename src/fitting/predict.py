@@ -12,11 +12,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+
 from fitting.step1 import fit_step1
 from fitting.step2 import fit_step2
 from fitting.step2_mc import fit_step2 as fit_step2_mc
-
-from scaling.fitting_functions import chinchilla_n_d_fit, chinchilla_n_d_negated_fit, log_sigmoid, sigmoid
+from scaling.fitting_functions import (
+    chinchilla_n_d_fit,
+    chinchilla_n_d_negated_fit,
+    log_sigmoid,
+    sigmoid,
+)
 from scaling.utils import (
     get_final_configs,
     get_step1_data_by_name,
@@ -81,7 +86,9 @@ def parse_args():
     return args
 
 
-def predict_chained(data_by_name, step1_coefficients, step2_coefficients, y_metric=None, use_log_sigmoid=False):
+def predict_chained(
+    data_by_name, step1_coefficients, step2_coefficients, y_metric=None, use_log_sigmoid=False
+):
     predicted_data_by_name = {}
     plotted_predicted_data_by_name = {}
 
@@ -94,7 +101,7 @@ def predict_chained(data_by_name, step1_coefficients, step2_coefficients, y_metr
         step_1_fn = chinchilla_n_d_negated_fit
     else:
         raise ValueError(f"Unknown y_metric: {y_metric}")
-    
+
     step_2_fn = log_sigmoid if use_log_sigmoid else sigmoid
 
     for name, data in data_by_name.items():
@@ -151,7 +158,7 @@ def plot_chained(
             data["ys"],
             color=config.color,
             linestyle="--",
-            alpha=0.7 if config.color != 'grey' else 0.3,
+            alpha=0.7 if config.color != "grey" else 0.3,
             linewidth=1.5,
             label=f"{config.label} (fitted)" if config.mode == "train" else None,
         )
@@ -163,7 +170,7 @@ def plot_chained(
         predicted_data = predicted_data_by_name[name]
 
         lns = data.get("ls", ["o"] * len(data["ds"]))
-        for i, (d, y, ln) in enumerate(zip(data["ds"], data["xs"], lns)):  
+        for i, (d, y, ln) in enumerate(zip(data["ds"], data["xs"], lns)):
             ax.scatter(
                 d,
                 y,
@@ -202,7 +209,11 @@ def plot_chained(
     ax.legend(loc="upper right", ncols=1, fontsize=FONTSIZE)
     ax.set_xlabel("Tokens (D)", fontsize=FONTSIZE)
     ax.set_ylabel("Task RC accuracy", fontsize=FONTSIZE)
-    display_name = tasks[task_name].display_name if isinstance(task_name, str) and task_name in tasks else task_name
+    display_name = (
+        tasks[task_name].display_name
+        if isinstance(task_name, str) and task_name in tasks
+        else task_name
+    )
     ax.set_title(
         f"{display_name}",
         fontsize=FONTSIZE,

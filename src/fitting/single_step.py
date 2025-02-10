@@ -2,18 +2,18 @@
 
 import argparse
 import warnings
-from scipy.optimize import OptimizeWarning
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from scipy.optimize import OptimizeWarning
 
 from scaling.fitting_functions import (
     combined_fit,
+    combined_flops_sigmoid_fit,
     get_coefficients_huber,
     grad_combined_fit,
-    combined_flops_sigmoid_fit,
-    grad_combined_flops_sigmoid_fit
+    grad_combined_flops_sigmoid_fit,
 )
 from scaling.utils import (
     get_final_configs,
@@ -51,7 +51,6 @@ def fit_single_step(data_by_name, task_name, use_flops=False):
             train_fs += data["fs"]
             train_ys += data["xs"]
 
-
     task_min = tasks[task_name].task_minimum if task_name in tasks else 0
 
     if use_flops:
@@ -63,13 +62,21 @@ def fit_single_step(data_by_name, task_name, use_flops=False):
             [10.0, 0.4, 0.5, -2.7, 1.4, 3.2, 1.3],
             [10.0, 0.4, 0.5, -0.09, 0.6, 6.5, 0.1],
             [10.0, 0.4, 0.5, -0.64, -0.41, 12.7, 1.05],
-            [10.0, 0.4, 0.5, -2.15771768e-02, 1.39273020e+00, -5.85129498e+01, 4.54084320e-01],
-            [10.0, 0.4, 0.5, -1.60006552e+00, 1.36001561e+00, -4.95252012e+02, 4.10217043e-01]
+            [10.0, 0.4, 0.5, -2.15771768e-02, 1.39273020e00, -5.85129498e01, 4.54084320e-01],
+            [10.0, 0.4, 0.5, -1.60006552e00, 1.36001561e00, -4.95252012e02, 4.10217043e-01],
         ]
-        bounds = [(None, None), (None, None), (None, None), (None, None), (None, None), (None, None), (None, None)]
+        bounds = [
+            (None, None),
+            (None, None),
+            (None, None),
+            (None, None),
+            (None, None),
+            (None, None),
+            (None, None),
+        ]
     else:
         p0s = [
-            [3.0, 5.0, 0.2, 0.3, 0.0, task_min-1, 1.0],
+            [3.0, 5.0, 0.2, 0.3, 0.0, task_min - 1, 1.0],
         ]
         bounds = [(0, None), (0, None), (0, None), (0, None), (None, None), (-1.0, 0), (0, 1)]
 
@@ -101,19 +108,19 @@ def fit_single_step(data_by_name, task_name, use_flops=False):
 
                 if cov.sum() > 1_000_000:
                     # print(cov.sum())
-                    warnings.warn(f"Cov is {cov.sum()}", OptimizeWarning) 
+                    warnings.warn(f"Cov is {cov.sum()}", OptimizeWarning)
 
                 # Check if an OptimizeWarning was raised
                 if not any(issubclass(warning.category, OptimizeWarning) for warning in w):
                     # print(task_name, coefficients)
                     return coefficients
-            except RuntimeError as e:
-                print(f'Optimization error for step 2 on {task_name}')
+            except RuntimeError:
+                print(f"Optimization error for step 2 on {task_name}")
                 pass
 
             try_idx += 1
 
-    print(f'Failed to optimize single step 1 on {task_name}')
+    print(f"Failed to optimize single step 1 on {task_name}")
     return coefficients
 
 
@@ -245,7 +252,11 @@ def plot_single_step(
     ax.legend(loc="upper right", ncols=1, fontsize=FONTSIZE)
     ax.set_xlabel("Tokens (D)", fontsize=FONTSIZE)
     ax.set_ylabel("Task RC accuracy", fontsize=FONTSIZE)
-    display_name = tasks[task_name].display_name if isinstance(task_name, str) and task_name in tasks else task_name
+    display_name = (
+        tasks[task_name].display_name
+        if isinstance(task_name, str) and task_name in tasks
+        else task_name
+    )
     ax.set_title(
         f"{display_name} ({avg_unsigned_rel_error * 100:.2f}%)",
         fontsize=FONTSIZE,

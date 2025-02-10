@@ -229,9 +229,11 @@ def plot_step1(
                     f"{abs(rel_error) * 100:.1f}%",
                     (d, y_pred),
                     textcoords="offset points",
-                    xytext=(10, 1 - 10 * num_eval_annotation)
+                    xytext=(
+                        (10, 1 - 10 * num_eval_annotation)
                     if y_metric == "rc_bpb"
-                    else (-3, 5 * (-3 if num_eval_annotation % 2 == 0 else 1)),
+                        else (-3, 5 * (-3 if num_eval_annotation % 2 == 0 else 1))
+                    ),
                     ha="left",
                     va="bottom",
                     fontsize=FONTSIZE,
@@ -250,7 +252,11 @@ def plot_step1(
         "rc_soft_log": "TaskCE",
     }[y_metric]
     ax.set_ylabel(y_label_name, fontsize=FONTSIZE)
-    display_name = tasks[task_name].display_name if isinstance(task_name, str) and task_name in tasks else task_name
+    display_name = (
+        tasks[task_name].display_name
+        if isinstance(task_name, str) and task_name in tasks
+        else task_name
+    )
     ax.set_title(
         f"{display_name} (Fitting error: {avg_unsigned_rel_error * 100:.2f}%)",
         fontsize=FONTSIZE,

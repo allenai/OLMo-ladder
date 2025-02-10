@@ -414,9 +414,11 @@ v2_main_avg_5shot_tasks: Dict[str, DownstreamTaskPrediction] = {
         ]
         + [f"eval/downstream_soft_log/{key}_rc_5shot_soft_log" for key in v2_mmlu_test_names],
         task_accuracy_key=[
-            f"eval/downstream/{key}_rc_5shot_len_norm"
-            if "boolq" not in key
-            else f"eval/downstream/{key}_rc_5shot_acc"
+            (
+                f"eval/downstream/{key}_rc_5shot_len_norm"
+                if "boolq" not in key
+                else f"eval/downstream/{key}_rc_5shot_acc"
+            )
             for key in v2_core_small_names
         ]
         + [f"eval/downstream/{key}_rc_5shot_len_norm" for key in v2_mmlu_test_names],

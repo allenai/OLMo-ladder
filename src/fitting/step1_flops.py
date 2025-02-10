@@ -7,13 +7,13 @@ import numpy as np
 import seaborn as sns
 
 from scaling.fitting_functions import (
-    chinchilla_flops_fit,
-    get_coefficients_huber,
-    grad_chinchilla_flops_fit,
     chinchilla_flops_2_param_fit,
+    chinchilla_flops_fit,
+    chinchilla_flops_negated_fit,
+    get_coefficients_huber,
     grad_chinchilla_flops_2_param_fit,
-    chinchilla_flops_negated_fit, 
-    grad_chinchilla_flops_negated_fit
+    grad_chinchilla_flops_fit,
+    grad_chinchilla_flops_negated_fit,
 )
 from scaling.utils import (
     get_final_configs,
@@ -56,7 +56,7 @@ def fit_step1(data_by_name, y_metric, use_two_param=False):
 
     if y_metric == "rc_bpb":
         if use_two_param:
-            p0 = [10.0, 0.4] # initalization for 2 param fit
+            p0 = [10.0, 0.4]  # initalization for 2 param fit
             bounds = [(0, None), (0, 1.0)]
         else:
             p0 = [10.0, 0.4, 0.5]
@@ -80,7 +80,7 @@ def fit_step1(data_by_name, y_metric, use_two_param=False):
         )
     elif y_metric == "rc_acc":
         if use_two_param:
-            raise NotImplementedError('To use 2-param, implement a negated fit!')
+            raise NotImplementedError("To use 2-param, implement a negated fit!")
 
         fit_f, fit_grad = chinchilla_flops_negated_fit, grad_chinchilla_flops_negated_fit
 
@@ -120,7 +120,7 @@ def predict_step1(configs, data_by_name, coefficients, y_metric, use_two_param=F
     plotted_predicted_data_by_name = {}
 
     unsigned_rel_errors = []
-    rel_error = float('inf')
+    rel_error = float("inf")
 
     fmin = 0.8 * min([min(data["fs"]) for data in data_by_name.values()])
     fmax = 1.5 * max([max(data["fs"]) for data in data_by_name.values()])
@@ -132,7 +132,7 @@ def predict_step1(configs, data_by_name, coefficients, y_metric, use_two_param=F
             func = chinchilla_flops_fit
     elif y_metric == "rc_acc":
         if use_two_param:
-            raise NotImplementedError('To use 2-param, implement a negated fit!')
+            raise NotImplementedError("To use 2-param, implement a negated fit!")
         func = chinchilla_flops_negated_fit
     else:
         raise ValueError(f"Unknown y_metric: {y_metric}")
@@ -278,7 +278,11 @@ def plot_step1(
         ax.set_ylabel("Task RC accuracy", fontsize=FONTSIZE)
     else:
         raise ValueError(f"Unknown y_metric: {y_metric}")
-    display_name = tasks[task_name].display_name if isinstance(task_name, str) and task_name in tasks else task_name
+    display_name = (
+        tasks[task_name].display_name
+        if isinstance(task_name, str) and task_name in tasks
+        else task_name
+    )
     ax.set_title(
         f"{display_name} ({avg_unsigned_rel_error * 100:.2f}%)",
         fontsize=FONTSIZE,
