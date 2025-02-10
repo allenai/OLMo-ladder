@@ -3,8 +3,8 @@
 # python src/scripts/step2.py -k v2_main -c src/scripts/paper/configs/final.json -o src/scripts/paper/figures/step2_taskce_main.pdf -x rc_soft_log --skip_perc 0.5 --use_log_sigmoid
 
 import argparse
-import warnings
 import typing
+import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
