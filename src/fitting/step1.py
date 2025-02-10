@@ -206,7 +206,7 @@ def plot_step1(
                 d,
                 x,
                 color=config.color,
-                marker=MARKERS[ln] if config.mode == "train" else "o",
+                marker=MARKERS[ln] if config.mode == "train" and ln in MARKERS else "o",
                 s=50 if config.mode == "train" else 20,
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
             )

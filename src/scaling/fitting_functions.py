@@ -62,6 +62,17 @@ def grad_chinchilla_flops_fit(x, p):
     grad_E = 1
     return [grad_a, grad_alpha, grad_E]
 
+# x = flops
+# p[0] = a = log(A), p[1] = alpha, p[2] = E
+def chinchilla_flops_negated_fit(x, p):
+    return -np.exp(p[0]) / (x ** p[1]) + p[2]
+
+def grad_chinchilla_flops_negated_fit(x, p):
+    grad_a = -np.exp(p[0]) / x ** p[1]
+    grad_alpha = -np.exp(p[0]) * (-np.log(x)) / x ** p[1]
+    grad_E = 1
+    return [grad_a, grad_alpha, grad_E]
+
 
 # x = flops
 # p[0] = a = log(A), p[1] = alpha

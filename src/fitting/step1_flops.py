@@ -12,6 +12,8 @@ from scaling.fitting_functions import (
     grad_chinchilla_flops_fit,
     chinchilla_flops_2_param_fit,
     grad_chinchilla_flops_2_param_fit,
+    chinchilla_flops_negated_fit, 
+    grad_chinchilla_flops_negated_fit
 )
 from scaling.utils import (
     get_final_configs,
@@ -76,6 +78,26 @@ def fit_step1(data_by_name, y_metric, use_two_param=False):
             disp=False,
             return_cov=True,
         )
+    elif y_metric == "rc_acc":
+        if use_two_param:
+            raise NotImplementedError('To use 2-param, implement a negated fit!')
+
+        fit_f, fit_grad = chinchilla_flops_negated_fit, grad_chinchilla_flops_negated_fit
+
+        p0 = [0.3, 0.005, 1.4]
+        bounds = [(0, None), (0, None), (0, None)]
+
+        coefficients, cov = get_coefficients_huber(
+            train_fs,
+            train_xs,
+            fit_f,
+            fit_grad,
+            p0=p0,
+            bounds=bounds,
+            max_iter=1000000,
+            disp=False,
+            return_cov=True,
+        )
     else:
         raise ValueError(f"Unknown y_metric: {y_metric}")
 
@@ -109,7 +131,9 @@ def predict_step1(configs, data_by_name, coefficients, y_metric, use_two_param=F
         else:
             func = chinchilla_flops_fit
     elif y_metric == "rc_acc":
-        func = chinchilla_flops_fit
+        if use_two_param:
+            raise NotImplementedError('To use 2-param, implement a negated fit!')
+        func = chinchilla_flops_negated_fit
     else:
         raise ValueError(f"Unknown y_metric: {y_metric}")
 

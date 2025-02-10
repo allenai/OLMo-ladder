@@ -16,7 +16,7 @@ from fitting.step1 import fit_step1
 from fitting.step2 import fit_step2
 from fitting.step2_mc import fit_step2 as fit_step2_mc
 
-from scaling.fitting_functions import chinchilla_n_d_fit, log_sigmoid, sigmoid
+from scaling.fitting_functions import chinchilla_n_d_fit, chinchilla_n_d_negated_fit, log_sigmoid, sigmoid
 from scaling.utils import (
     get_final_configs,
     get_step1_data_by_name,
@@ -81,20 +81,27 @@ def parse_args():
     return args
 
 
-def predict_chained(data_by_name, step1_coefficients, step2_coefficients, use_log_sigmoid=False):
+def predict_chained(data_by_name, step1_coefficients, step2_coefficients, y_metric=None, use_log_sigmoid=False):
     predicted_data_by_name = {}
     plotted_predicted_data_by_name = {}
 
     dmin = 0.8 * min([min(data["ds"]) for data in data_by_name.values()])
     dmax = 1.5 * max([max(data["ds"]) for data in data_by_name.values()])
 
-    fit_fn = log_sigmoid if use_log_sigmoid else sigmoid
+    if y_metric == "rc_bpb" or y_metric == "c4" or y_metric == "rc_soft_log" or y_metric is None:
+        step_1_fn = chinchilla_n_d_fit
+    elif y_metric == "rc_acc":
+        step_1_fn = chinchilla_n_d_negated_fit
+    else:
+        raise ValueError(f"Unknown y_metric: {y_metric}")
+    
+    step_2_fn = log_sigmoid if use_log_sigmoid else sigmoid
 
     for name, data in data_by_name.items():
         predicted_data_by_name[name] = {
             "ds": data["ds"],
             "ys": [
-                fit_fn(chinchilla_n_d_fit([n, d], step1_coefficients), *step2_coefficients)  # type: ignore
+                step_2_fn(step_1_fn([n, d], step1_coefficients), *step2_coefficients)  # type: ignore
                 for n, d in zip(data["ns"], data["ds"])
             ],
         }
@@ -103,7 +110,7 @@ def predict_chained(data_by_name, step1_coefficients, step2_coefficients, use_lo
         plotted_predicted_data_by_name[name] = {
             "ds": ds,
             "ys": [
-                fit_fn(chinchilla_n_d_fit([n, d], step1_coefficients), *step2_coefficients)  # type: ignore
+                step_2_fn(step_1_fn([n, d], step1_coefficients), *step2_coefficients)  # type: ignore
                 for n, d in zip(ns, ds)
             ],
         }
@@ -161,7 +168,7 @@ def plot_chained(
                 d,
                 y,
                 color=config.color,
-                marker=MARKERS[ln] if config.mode == "train" else "o",
+                marker=MARKERS[ln] if config.mode == "train" and ln in MARKERS else "o",
                 s=50 if config.mode == "train" else 20,
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
             )

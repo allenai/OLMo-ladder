@@ -62,7 +62,7 @@ def parse_args():
     return args
 
 
-def fit_step2(data_by_name, task_name, y_metric, _min=None, _max=None, use_log_sigmoid=False, use_helper_points=True):
+def fit_step2(data_by_name, task_name, y_metric=None, _min=None, _max=None, use_log_sigmoid=False, use_helper_points=True):
     train_xs, train_ys = [], []
     for name, data in data_by_name.items():
         if data["mode"] == "train":
@@ -79,13 +79,23 @@ def fit_step2(data_by_name, task_name, y_metric, _min=None, _max=None, use_log_s
 
     # add ideal points (these are not plotted)
     if use_helper_points and not use_log_sigmoid:
-        train_xs.append(0.0)
-        train_ys.append(_max)
+        if y_metric == "rc_bpb" or y_metric is None:
+            train_xs.append(0.0)
+            train_ys.append(_max)
+        elif y_metric == "rc_acc":
+            train_xs.append(_max)
+            train_ys.append(_max)
+        else:
+            raise ValueError(f"Unknown y_metric: {y_metric}")
 
     if use_log_sigmoid:
         p0s = [[-0.1, 0.9, 3.0]]
         inital_bounds = [([-np.inf, 0.0, 0.0], [0.0, np.inf, np.inf])]
         fit_function = log_sigmoid
+    elif y_metric == "rc_acc":
+        p0s = [[2, 1, 1, -0.4]]
+        inital_bounds = [None]
+        fit_function = sigmoid
     else:
         # The starting point for FLOPs can be tricky to get right, so we iteratively try
         # different initalizations until we get one that converges
@@ -327,6 +337,7 @@ def plot_step2(
         ax.legend(loc="upper right", ncols=1, fontsize=FONTSIZE)
     x_label_name = {
         "rc_bpb": "Task loss",
+        "rc_acc": x_metric,
         "c4": "C4 loss",
         "rc_soft_log": "TaskCE",
     }[x_metric]

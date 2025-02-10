@@ -10,7 +10,7 @@ from fitting.step1_flops import fit_step1
 from fitting.step2 import fit_step2
 from fitting.step2_mc import fit_step2 as fit_step2_mc
 
-from scaling.fitting_functions import chinchilla_flops_fit, chinchilla_flops_2_param_fit, log_sigmoid, sigmoid
+from scaling.fitting_functions import chinchilla_flops_fit, chinchilla_flops_negated_fit, chinchilla_flops_2_param_fit, log_sigmoid, sigmoid
 from scaling.utils import (
     get_final_configs,
     get_step1_data_by_name,
@@ -97,7 +97,7 @@ def parse_args():
     return args
 
 
-def predict_chained_flops(data_by_name, step1_coefficients, step2_coefficients, use_two_param=False, extrapolate_ratio=[0.8, 1.5]):
+def predict_chained_flops(data_by_name, step1_coefficients, step2_coefficients, y_metric=None, use_two_param=False, extrapolate_ratio=[0.8, 1.5]):
     predicted_data_by_name = {}
     plotted_predicted_data_by_name = {}
 
@@ -132,11 +132,20 @@ def predict_chained_flops(data_by_name, step1_coefficients, step2_coefficients, 
                     rel_error = (y_pred - y) / y
 
     else:
+        if y_metric == "rc_bpb" or y_metric == "c4" or y_metric == "rc_soft_log" or y_metric is None:
+            step_1_fn = chinchilla_flops_fit
+        elif y_metric == "rc_acc":
+            step_1_fn = chinchilla_flops_negated_fit
+        else:
+            raise ValueError(f"Unknown y_metric: {y_metric}")
+        
+        step_2_fn = sigmoid
+
         for name, data in data_by_name.items():
             predicted_data_by_name[name] = {
                 "fs": data["fs"],
                 "ys": [
-                    sigmoid(chinchilla_flops_fit(f, step1_coefficients), *step2_coefficients)
+                    step_2_fn(step_1_fn(f, step1_coefficients), *step2_coefficients)
                     for f in data["fs"]
                 ],
             }
@@ -144,7 +153,7 @@ def predict_chained_flops(data_by_name, step1_coefficients, step2_coefficients, 
             plotted_predicted_data_by_name[name] = {
                 "fs": fs,
                 "ys": [
-                    sigmoid(chinchilla_flops_fit(f, step1_coefficients), *step2_coefficients)
+                    step_2_fn(step_1_fn(f, step1_coefficients), *step2_coefficients)
                     for f in fs
                 ],
             }
