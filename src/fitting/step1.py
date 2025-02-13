@@ -83,10 +83,8 @@ def fit_step1(data_by_name, y_metric):
             return_cov=True,
         )
     elif y_metric == "rc_acc":
-        p0 = [2.5, 2.5, 0.2, 0.12, 1.1]  # for ian's project
-        # p0 = [2.0, 2.0, 0.2, 0.2, 1.0]
-        # bounds = [(0, None), (0, None), (0, None), (None, None), (None, None)]
-        bounds = [(None, None), (None, None), (None, None), (None, None), (None, None)]
+        p0 = [2.0, 2.0, 0.2, 0.2, 1.0]
+        bounds = [(0, None), (0, None), (0, None), (None, None), (None, None)]
         coefficients, cov = get_coefficients_huber(
             train_nds,
             train_ys,
@@ -233,7 +231,7 @@ def plot_step1(
                     textcoords="offset points",
                     xytext=(
                         (10, 1 - 10 * num_eval_annotation)
-                        if y_metric == "rc_bpb"
+                    if y_metric == "rc_bpb"
                         else (-3, 5 * (-3 if num_eval_annotation % 2 == 0 else 1))
                     ),
                     ha="left",
