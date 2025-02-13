@@ -67,6 +67,13 @@ def fit_step1(data_by_name, y_metric, use_two_param=False):
         else:
             fit_f, fit_grad = chinchilla_flops_fit, grad_chinchilla_flops_fit
 
+        # Filter out nan points
+        train_fs, train_xs = np.array(train_fs), np.array(train_xs)
+        mask = ~np.isnan(train_fs) & ~np.isnan(train_xs)
+        train_fs = train_fs[mask]
+        train_xs = train_xs[mask]
+        print('Filering out NaN points for fitting step 1')
+
         coefficients, cov = get_coefficients_huber(
             train_fs,
             train_xs,
@@ -238,7 +245,7 @@ def plot_step1(
                 f,
                 y,
                 color=config.color,
-                marker=MARKERS[size_idx] if config.mode == "train" else "o",
+                marker=MARKERS[size_idx] if config.mode == "train" and size_idx < len(MARKERS) else "o",
                 s=20 if config.mode == "train" else 20,
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
             )

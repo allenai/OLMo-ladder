@@ -232,7 +232,7 @@ def plot_chained(
                 y,
                 color=config.color,
                 alpha=0.7 if config.color != "grey" else 0.1,
-                marker=MARKERS[size_idx] if config.mode == "train" else "o",
+                marker=MARKERS[size_idx] if config.mode == "train" and size_idx < len(MARKERS) else "o",
                 s=20 if config.mode == "train" else 20,
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
             )
