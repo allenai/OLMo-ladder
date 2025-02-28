@@ -231,7 +231,7 @@ def plot_step1(
                     textcoords="offset points",
                     xytext=(
                         (10, 1 - 10 * num_eval_annotation)
-                    if y_metric == "rc_bpb"
+                        if y_metric == "rc_bpb"
                         else (-3, 5 * (-3 if num_eval_annotation % 2 == 0 else 1))
                     ),
                     ha="left",

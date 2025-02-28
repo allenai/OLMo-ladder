@@ -72,7 +72,7 @@ def fit_step1(data_by_name, y_metric, use_two_param=False):
         mask = ~np.isnan(train_fs) & ~np.isnan(train_xs)
         train_fs = train_fs[mask]
         train_xs = train_xs[mask]
-        print('Filering out NaN points for fitting step 1')
+        print("Filering out NaN points for fitting step 1")
 
         coefficients, cov = get_coefficients_huber(
             train_fs,
@@ -245,7 +245,9 @@ def plot_step1(
                 f,
                 y,
                 color=config.color,
-                marker=MARKERS[size_idx] if config.mode == "train" and size_idx < len(MARKERS) else "o",
+                marker=(
+                    MARKERS[size_idx] if config.mode == "train" and size_idx < len(MARKERS) else "o"
+                ),
                 s=20 if config.mode == "train" else 20,
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
             )
