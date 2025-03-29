@@ -195,7 +195,7 @@ def plot_variance_analysis(config, variance_results, last_n_points):
         n_groups = 1
         fig, axes = plt.subplots(
             1,
-            num_tasks*2,
+            num_tasks * 2,
             figsize=(2.75 * 1.7 * 2 * n_groups, 2.5),
         )
     else:
@@ -223,13 +223,14 @@ def plot_variance_analysis(config, variance_results, last_n_points):
 
     # Plot results
     for i, (task_name, results) in enumerate(variance_results.items()):
+        ax1: plt.Axes
+        ax2: plt.Axes
         if axes.ndim == 1:
-            print(axes)
-            ax1 = axes[i*2]
-            ax2 = axes[i*2 + 1]
+            ax1 = axes[i * 2]
+            ax2 = axes[i * 2 + 1]
         else:
-            ax1: plt.Axes = axes[(i * 2) // (2 * n_groups)][(i * 2) % (2 * n_groups)]
-            ax2: plt.Axes = axes[(i * 2) // (2 * n_groups)][((i * 2) % (2 * n_groups)) + 1]
+            ax1 = axes[(i * 2) // (2 * n_groups)][(i * 2) % (2 * n_groups)]
+            ax2 = axes[(i * 2) // (2 * n_groups)][((i * 2) % (2 * n_groups)) + 1]
 
         _plot_single_variance_analysis(
             config,
@@ -365,11 +366,11 @@ def run_two_step_prediction(keys_key, variant=None):
         "--moving_avg",
         "5",
     ]
-    if variant == 'c4':
-        step1_args += ['-y', 'c4']
-    elif variant == 'rc_soft_log':
-        step1_args += ['-y', 'rc_soft_log']
-    elif variant == 'rc_bpb':
+    if variant == "c4":
+        step1_args += ["-y", "c4"]
+    elif variant == "rc_soft_log":
+        step1_args += ["-y", "rc_soft_log"]
+    elif variant == "rc_bpb":
         pass
     else:
         raise ValueError(variant)
@@ -389,11 +390,11 @@ def run_two_step_prediction(keys_key, variant=None):
         "--moving_avg",
         "5",
     ]
-    if variant == 'c4':
-        step2_args += ['-x', 'c4']
-    elif variant == 'rc_soft_log':
-        step2_args += ['-x', 'rc_soft_log', '--use_log_sigmoid']
-    elif variant == 'rc_bpb':
+    if variant == "c4":
+        step2_args += ["-x", "c4"]
+    elif variant == "rc_soft_log":
+        step2_args += ["-x", "rc_soft_log", "--use_log_sigmoid"]
+    elif variant == "rc_bpb":
         pass
     else:
         raise ValueError(variant)
@@ -421,10 +422,10 @@ def run_two_step_prediction(keys_key, variant=None):
         "--moving_avg",
         "5",
     ]
-    if variant == 'c4':
-        predict_args += ['--x_metric', 'c4']
-    elif variant == 'rc_soft_log':
-        predict_args += ['--x_metric', 'rc_soft_log'] # '--use_log_sigmoid'
+    if variant == "c4":
+        predict_args += ["--x_metric", "c4"]
+    elif variant == "rc_soft_log":
+        predict_args += ["--x_metric", "rc_soft_log"]  # '--use_log_sigmoid'
     sys.argv = [sys.argv[0]] + predict_args
     predict_df = predict_main()
 
@@ -495,18 +496,20 @@ def print_table(df, last_n_points, print_table_as_latex=False):
             if "CV" in col:
                 mean = means[col]
                 colored_df[col] = df[col].apply(
-                    lambda x: f"\033[91m{x*100:>10.2f}%\033[0m"
-                    if x > mean
-                    else f"\033[92m{x*100:>10.2f}%\033[0m"
+                    lambda x: (
+                        f"\033[91m{x*100:>10.2f}%\033[0m"
+                        if x > mean
+                        else f"\033[92m{x*100:>10.2f}%\033[0m"
+                    )
                 )
             elif "Error" in col:
                 colored_df[col] = df[col].apply(lambda x: f"\033[0m{abs(x)*100:>10.2f}%\033[0m")
             else:
                 mean = means[col]
                 colored_df[col] = df[col].apply(
-                    lambda x: f"\033[91m{x:>10.4f}\033[0m"
-                    if x > mean
-                    else f"\033[92m{x:>10.4f}\033[0m"
+                    lambda x: (
+                        f"\033[91m{x:>10.4f}\033[0m" if x > mean else f"\033[92m{x:>10.4f}\033[0m"
+                    )
                 )
 
         print(colored_df.to_string(justify="left", header=False))
@@ -554,13 +557,15 @@ def main():
 
     sns.set_style("whitegrid")
 
-    variant = args.y_metric # "rc_bpb", "c4", "rc_soft_log"
+    variant = args.y_metric  # "rc_bpb", "c4", "rc_soft_log"
 
     model_name, variance_results = compute_variance(configs, keys, args.last_n_points, variant)
     fig, df = plot_variance_analysis(configs[model_name], variance_results, args.last_n_points)
 
     if args.run_prediction:
-        step1_rel_errors, step2_rel_errors, predict_rel_errors = run_two_step_prediction(keys_key, variant)
+        step1_rel_errors, step2_rel_errors, predict_rel_errors = run_two_step_prediction(
+            keys_key, variant
+        )
 
         # Merge with the existing df
         df = df.merge(step1_rel_errors, on="Task", how="left")

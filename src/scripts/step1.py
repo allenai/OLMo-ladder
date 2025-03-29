@@ -228,9 +228,11 @@ def plot_step1(
                     f"{abs(rel_error) * 100:.1f}%",
                     (d, y_pred),
                     textcoords="offset points",
-                    xytext=(10, 1 - 10 * num_eval_annotation)
-                    if y_metric == "rc_bpb"
-                    else (-3, 5 * (-3 if num_eval_annotation % 2 == 0 else 1)),
+                    xytext=(
+                        (10, 1 - 10 * num_eval_annotation)
+                        if y_metric == "rc_bpb"
+                        else (-3, 5 * (-3 if num_eval_annotation % 2 == 0 else 1))
+                    ),
                     ha="left",
                     va="bottom",
                     fontsize=FONTSIZE,

@@ -414,9 +414,11 @@ v2_main_avg_5shot_tasks: Dict[str, DownstreamTaskPrediction] = {
         ]
         + [f"eval/downstream_soft_log/{key}_rc_5shot_soft_log" for key in v2_mmlu_test_names],
         task_accuracy_key=[
-            f"eval/downstream/{key}_rc_5shot_len_norm"
-            if "boolq" not in key
-            else f"eval/downstream/{key}_rc_5shot_acc"
+            (
+                f"eval/downstream/{key}_rc_5shot_len_norm"
+                if "boolq" not in key
+                else f"eval/downstream/{key}_rc_5shot_acc"
+            )
             for key in v2_core_small_names
         ]
         + [f"eval/downstream/{key}_rc_5shot_len_norm" for key in v2_mmlu_test_names],
@@ -817,13 +819,10 @@ def get_step1_data_by_name(configs, task_name, y_metric="rc_bpb", moving_avg=1):
     elif y_metric == "rc_soft_log":
         keys = task.get_accuracy_keys()
         keys = [
-            key.replace("/downstream/", "/downstream_soft_log/") if '_len_norm' in key else key
+            key.replace("/downstream/", "/downstream_soft_log/") if "_len_norm" in key else key
             for key in keys
         ]
-        keys = [
-            key.replace("_len_norm", "_soft_log")
-            for key in keys
-        ]
+        keys = [key.replace("_len_norm", "_soft_log") for key in keys]
     else:
         raise ValueError(f"Invalid y_metric: {y_metric}")
 
@@ -919,13 +918,10 @@ def get_step2_data_by_name(
     elif x_metric == "rc_soft_log":
         loss_keys = task.get_accuracy_keys()
         loss_keys = [
-            key.replace("/downstream/", "/downstream_soft_log/") if '_len_norm' in key else key
+            key.replace("/downstream/", "/downstream_soft_log/") if "_len_norm" in key else key
             for key in loss_keys
         ]
-        loss_keys = [
-            key.replace("_len_norm", "_soft_log")
-            for key in loss_keys
-        ]
+        loss_keys = [key.replace("_len_norm", "_soft_log") for key in loss_keys]
     elif x_metric == "c4":
         loss_keys = ["eval/c4_en-validation/CrossEntropyLoss"]
     else:
