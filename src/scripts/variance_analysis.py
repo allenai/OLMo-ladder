@@ -2,6 +2,10 @@
 # python src/scripts/variance_analysis.py -k v2_main_variance -c src/scripts/paper/configs/final_variance.json -o src/scripts/paper/figures/variance.pdf --last_n_points 10 --run_prediction --print_table_as_latex
 # python src/scripts/variance_analysis.py -k v2_main_variance -c src/scripts/paper/configs/final_variance.json -o src/scripts/paper/figures/variance.pdf --last_n_points 10
 
+# python src/scripts/variance_analysis.py -k v2_main_variance -c src/scripts/paper/configs/final_variance.json -o src/scripts/paper/figures/variance_bpb.pdf --last_n_points 10 --run_prediction -y rc_bpb
+# python src/scripts/variance_analysis.py -k v2_main_variance -c src/scripts/paper/configs/final_variance.json -o src/scripts/paper/figures/variance_c4.pdf --last_n_points 10 --run_prediction -y c4
+# python src/scripts/variance_analysis.py -k v2_main_variance -c src/scripts/paper/configs/final_variance.json -o src/scripts/paper/figures/variance_rc_soft_log.pdf --last_n_points 10 --run_prediction -y rc_soft_log
+
 import argparse
 import os
 import sys
@@ -56,6 +60,13 @@ def parse_args():
         "--run_prediction",
         action="store_true",
         help="Also report prediction errors alongisde the std. dev. of the ladder model",
+    )
+    parser.add_argument(
+        "-y",
+        "--y_metric",
+        default="rc_bpb",
+        choices=["rc_bpb", "rc_acc", "c4", "rc_soft_log"],
+        help="Metric to perform variance analysis",
     )
     args = parser.parse_args()
 
@@ -172,11 +183,20 @@ def plot_variance_analysis(config, variance_results, last_n_points):
     num_tasks = len(variance_results)
 
     if num_tasks < 4:
+        # # Create 2x2 figure
+        # n_groups = 1
+        # fig, axes = plt.subplots(
+        #     num_tasks // n_groups,
+        #     2 * n_groups,
+        #     figsize=(2.75 * 2 * n_groups, 2.5 * (num_tasks // n_groups)),
+        # )
+
+        # Create 1x4 figure
         n_groups = 1
         fig, axes = plt.subplots(
-            num_tasks // n_groups,
-            2 * n_groups,
-            figsize=(2.75 * 2 * n_groups, 2.5 * (num_tasks // n_groups)),
+            1,
+            num_tasks*2,
+            figsize=(2.75 * 1.7 * 2 * n_groups, 2.5),
         )
     else:
         # Create a figure with spacing between the two groups of tasks
@@ -203,8 +223,13 @@ def plot_variance_analysis(config, variance_results, last_n_points):
 
     # Plot results
     for i, (task_name, results) in enumerate(variance_results.items()):
-        ax1: plt.Axes = axes[(i * 2) // (2 * n_groups)][(i * 2) % (2 * n_groups)]
-        ax2: plt.Axes = axes[(i * 2) // (2 * n_groups)][((i * 2) % (2 * n_groups)) + 1]
+        if axes.ndim == 1:
+            print(axes)
+            ax1 = axes[i*2]
+            ax2 = axes[i*2 + 1]
+        else:
+            ax1: plt.Axes = axes[(i * 2) // (2 * n_groups)][(i * 2) % (2 * n_groups)]
+            ax2: plt.Axes = axes[(i * 2) // (2 * n_groups)][((i * 2) % (2 * n_groups)) + 1]
 
         _plot_single_variance_analysis(
             config,
@@ -222,16 +247,15 @@ def plot_variance_analysis(config, variance_results, last_n_points):
     # Collect all unique handles and labels
     all_handles = []
     all_labels = []
-    for row_ in axes:
-        for ax in row_:
-            handles, labels = ax.get_legend_handles_labels()
-            for handle, label in zip(handles, labels):
-                if label not in all_labels:
-                    all_handles.append(handle)
-                    all_labels.append(label)
+    for ax in axes.flatten():
+        handles, labels = ax.get_legend_handles_labels()
+        for handle, label in zip(handles, labels):
+            if label not in all_labels:
+                all_handles.append(handle)
+                all_labels.append(label)
 
     # Remove redundant labels / legends
-    for i, row_ in enumerate(axes):
+    for i, row_ in enumerate((axes if axes.ndim > 1 else [axes])):
         for j, ax in enumerate(row_):
             if i != len(axes) - 1:
                 ax.set_xlabel("")
@@ -253,7 +277,8 @@ def plot_variance_analysis(config, variance_results, last_n_points):
         handle.set_alpha(1.0)
 
     if num_tasks < 4:
-        fig.tight_layout(h_pad=0.02, rect=[0, 0, 1, 0.95])
+        # fig.tight_layout(h_pad=0.02, rect=[0, 0, 1, 0.95])
+        fig.tight_layout(h_pad=0.02, rect=[0, 0, 1, 0.9])
 
     df = pd.merge(
         pd.merge(
@@ -285,11 +310,11 @@ def plot_variance_analysis(config, variance_results, last_n_points):
     return fig, df
 
 
-def compute_variance(configs, keys, last_n_points):
+def compute_variance(configs, keys, last_n_points, variant="rc_bpb"):
     variance_results = {}
 
     for r, task_name in enumerate(keys):
-        data_by_name = get_step2_data_by_name(configs, task_name)
+        data_by_name = get_step2_data_by_name(configs, task_name, x_metric=variant)
 
         # get only entry of data_by_name
         assert (
@@ -322,7 +347,7 @@ def compute_variance(configs, keys, last_n_points):
     return name, variance_results
 
 
-def run_two_step_prediction(keys_key):
+def run_two_step_prediction(keys_key, variant=None):
     """Use subprocesses to run each stage of the ladder model"""
     # Run predictions on 7B scale
     orig_argv = sys.argv
@@ -340,6 +365,14 @@ def run_two_step_prediction(keys_key):
         "--moving_avg",
         "5",
     ]
+    if variant == 'c4':
+        step1_args += ['-y', 'c4']
+    elif variant == 'rc_soft_log':
+        step1_args += ['-y', 'rc_soft_log']
+    elif variant == 'rc_bpb':
+        pass
+    else:
+        raise ValueError(variant)
     sys.argv = [sys.argv[0]] + step1_args
     step1_df = step1_main()
 
@@ -356,6 +389,14 @@ def run_two_step_prediction(keys_key):
         "--moving_avg",
         "5",
     ]
+    if variant == 'c4':
+        step2_args += ['-x', 'c4']
+    elif variant == 'rc_soft_log':
+        step2_args += ['-x', 'rc_soft_log', '--use_log_sigmoid']
+    elif variant == 'rc_bpb':
+        pass
+    else:
+        raise ValueError(variant)
     sys.argv = [sys.argv[0]] + step2_args
     step2_df = step2_main()
 
@@ -380,6 +421,10 @@ def run_two_step_prediction(keys_key):
         "--moving_avg",
         "5",
     ]
+    if variant == 'c4':
+        predict_args += ['--x_metric', 'c4']
+    elif variant == 'rc_soft_log':
+        predict_args += ['--x_metric', 'rc_soft_log'] # '--use_log_sigmoid'
     sys.argv = [sys.argv[0]] + predict_args
     predict_df = predict_main()
 
@@ -509,11 +554,13 @@ def main():
 
     sns.set_style("whitegrid")
 
-    model_name, variance_results = compute_variance(configs, keys, args.last_n_points)
+    variant = args.y_metric # "rc_bpb", "c4", "rc_soft_log"
+
+    model_name, variance_results = compute_variance(configs, keys, args.last_n_points, variant)
     fig, df = plot_variance_analysis(configs[model_name], variance_results, args.last_n_points)
 
     if args.run_prediction:
-        step1_rel_errors, step2_rel_errors, predict_rel_errors = run_two_step_prediction(keys_key)
+        step1_rel_errors, step2_rel_errors, predict_rel_errors = run_two_step_prediction(keys_key, variant)
 
         # Merge with the existing df
         df = df.merge(step1_rel_errors, on="Task", how="left")
