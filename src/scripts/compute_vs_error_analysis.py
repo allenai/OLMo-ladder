@@ -14,8 +14,8 @@ import seaborn as sns
 from step1 import fit_step1, predict_step1
 from step2 import fit_step2, predict_step2
 
-from scaling.fitting_functions import chinchilla_n_d_fit, sigmoid
-from scaling.utils import (
+from ladder.scaling.fitting_functions import chinchilla_n_d_fit, sigmoid
+from ladder.scaling.utils import (
     MODEL_FLOPS,
     MODEL_PARAMS,
     FinalConfig,

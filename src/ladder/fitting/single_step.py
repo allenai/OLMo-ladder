@@ -8,14 +8,14 @@ import numpy as np
 import seaborn as sns
 from scipy.optimize import OptimizeWarning
 
-from scaling.fitting_functions import (
+from ladder.scaling.fitting_functions import (
     combined_fit,
     combined_flops_sigmoid_fit,
     get_coefficients_huber,
     grad_combined_fit,
     grad_combined_flops_sigmoid_fit,
 )
-from scaling.utils import (
+from ladder.scaling.utils import (
     get_final_configs,
     get_step1_data_by_name,
     get_task_sets,
@@ -89,6 +89,13 @@ def fit_single_step(data_by_name, task_name, use_flops=False):
             warnings.simplefilter("always", OptimizeWarning)
 
             if use_flops:
+                # Filter out nan points
+                train_fs, train_ys = np.array(train_fs), np.array(train_ys)
+                mask = ~np.isnan(train_fs) & ~np.isnan(train_ys)
+                train_fs = train_fs[mask]
+                train_ys = train_ys[mask]
+                print('Filering out NaN points for fitting step 1')
+
                 x, y = train_fs, train_ys
                 fit_f, fit_grad = combined_flops_sigmoid_fit, grad_combined_flops_sigmoid_fit
             else:
@@ -130,9 +137,6 @@ def predict_single_step(data_by_name, coefficients, use_flops=False):
     predicted_data_by_name = {}
     plotted_predicted_data_by_name = {}
 
-    dmin = 0.8 * min([min(data["ds"]) for data in data_by_name.values()])
-    dmax = 1.5 * max([max(data["ds"]) for data in data_by_name.values()])
-
     if use_flops:
         dmin = 0.8 * min([min(data["fs"]) for data in data_by_name.values()])
         dmax = 1.5 * max([max(data["fs"]) for data in data_by_name.values()])
@@ -151,22 +155,26 @@ def predict_single_step(data_by_name, coefficients, use_flops=False):
                 "ds": data["ds"],
                 "ys": [combined_fit([n, d], coefficients) for n, d in zip(data["ns"], data["ds"])],
             }
-        ds = np.exp(np.linspace(np.log(dmin), np.log(dmax), 100))
-        ns = [data["ns"][0]] * len(ds)
+
+        xs = np.exp(np.linspace(np.log(dmin), np.log(dmax), 100))
+        ns = [data["ns"][0]] * len(xs)
+        
         if use_flops:
             plotted_predicted_data_by_name[name] = {
-                "ds": ds,
-                "ys": [combined_flops_sigmoid_fit(f, coefficients) for f in ds],
+                "ds": xs,
+                "ys": [combined_flops_sigmoid_fit(f, coefficients) for f in xs],
             }
+            # print(xs)
+            # print(coefficients)
         else:
             plotted_predicted_data_by_name[name] = {
-                "ds": ds,
-                "ys": [combined_fit([n, d], coefficients) for n, d in zip(ns, ds)],
+                "ds": xs,
+                "ys": [combined_fit([n, d], coefficients) for n, d in zip(ns, xs)],
             }
 
         if data["mode"] == "eval":
             predicted_data = predicted_data_by_name[name]
-            for d, y, y_pred in zip(data["ds"], data["ys"], predicted_data["ys"]):
+            for y, y_pred in zip(data["ys"], predicted_data["ys"]):
                 rel_error = (y_pred - y) / y
 
     return predicted_data_by_name, plotted_predicted_data_by_name, (y, y_pred, rel_error)
@@ -214,12 +222,12 @@ def plot_single_step(
             xs, ys = data["ds"], data["xs"]
 
         lns = data.get("ls", ["o"] * len(data["ds"]))
-        for i, (d, y, ln) in enumerate(zip(data["ds"], data["xs"], lns)):
+        for i, (d, y, ln) in enumerate(zip(xs, ys, lns)):
             ax.scatter(
                 d,
                 y,
                 color=config.color,
-                marker=MARKERS[ln] if config.mode == "train" else "o",
+                marker=MARKERS.get(ln, ln) if config.mode == "train" else "o",
                 s=50 if config.mode == "train" else 20,
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
             )

@@ -12,14 +12,14 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from scaling.fitting_functions import (
+from ladder.scaling.fitting_functions import (
     chinchilla_n_d_fit,
     chinchilla_n_d_negated_fit,
     get_coefficients_huber,
     grad_chinchilla_n_d_fit,
     grad_chinchilla_n_d_negated_fit,
 )
-from scaling.utils import (
+from ladder.scaling.utils import (
     get_final_configs,
     get_step1_data_by_name,
     get_task_sets,

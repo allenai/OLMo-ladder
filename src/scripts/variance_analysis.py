@@ -17,7 +17,7 @@ from predict import main as predict_main
 from step1 import main as step1_main
 from step2 import main as step2_main
 
-from scaling.utils import (
+from ladder.scaling.utils import (
     get_final_configs,
     get_step2_data_by_name,
     get_task_sets,

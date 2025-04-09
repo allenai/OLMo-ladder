@@ -12,7 +12,7 @@ import pandas as pd
 import seaborn as sns
 from scipy.optimize import OptimizeWarning
 
-from scaling.fitting_functions import (
+from ladder.scaling.fitting_functions import (
     get_coefficients,
     get_std_errors,
     grad_log_sigmoid_fit,
@@ -22,7 +22,7 @@ from scaling.fitting_functions import (
     sigmoid,
     sigmoid_fit,
 )
-from scaling.utils import (
+from ladder.scaling.utils import (
     get_final_configs,
     get_step2_data_by_name,
     get_task_sets,
@@ -194,6 +194,7 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
                     [x], [e_y_pred], coefficients, cov, fit_fn, grad_fit_fn
                 )  # [0]
                 delta_error = 1.96 * std_error
+                # std_error, delta_error = 0, 0
         else:
             predicted_data = predicted_data_by_name[name]
             for x, y, y_pred in zip(data["xs"], data["ys"], predicted_data["ys"]):
@@ -204,7 +205,7 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
     xmax = max(max(data["xs"]) for data in data_by_name.values())
     xmin = xmin - 0.2 * (xmax - xmin)
 
-    xs = np.linspace(xmin, xmax, 100)
+    xs = np.linspace(xmin, xmax, 1000)
     plotted_predicted_data = {
         "xs": xs,
         "ys": [predict_fn(x, *coefficients) for x in xs],  # type: ignore
@@ -233,6 +234,7 @@ def plot_step2(
     add_texts=False,
     show_fit_error=False,
     ax=plt.gca(),
+    plot_clean=False,
 ):
     fit_fn = log_sigmoid_fit if use_log_sigmoid else sigmoid_fit
     grad_fit_fn = grad_log_sigmoid_fit if use_log_sigmoid else grad_sigmoid_fit
@@ -245,6 +247,7 @@ def plot_step2(
         fit_fn,
         grad_fit_fn,
     )
+    # std_errors = np.zeros_like(plotted_predicted_data["ys"])
 
     # Compute prediction intervals
     plotted_y_lower = plotted_predicted_data["ys"] - 1.96 * std_errors
@@ -264,9 +267,9 @@ def plot_step2(
                 data["ys"],
                 color=config.color,
                 marker="o" if config.mode == "train" else "x",
-                s=5,
+                s=5 if not plot_clean else 3,
                 edgecolors="none" if config.mode == "train" else None,
-                alpha=0.7 if config.mode == "train" else 1.0,
+                alpha=(0.7 if not plot_clean else 0.5) if config.mode == "train" else 1.0,
                 label=f"{config.label} ({'fitted' if config.mode == 'train' else 'target'})",
             )
         for i, (x, y, y_pred) in enumerate(zip(data["xs"], data["ys"], predicted_data["ys"])):
@@ -284,19 +287,20 @@ def plot_step2(
                     y,
                     color=config.color,
                     marker="x",
-                    s=20,
+                    s=20 if not plot_clean else 10,
                     label=f"{config.label} ({'target'})",
                 )
-                if config.label in ["7B-4T", "13B-5T"]:
+                # if config.label in ["7B-4T", "13B-5T"]:
+                if config.mode == 'eval':
                     ax.scatter(
                         x,
                         y_pred,
                         color=config.color,
                         marker="o",
-                        s=20,
+                        s=20 if not plot_clean else 10,
                         label=f"{config.label} ({'predicted'})",
                     )
-                    if rel_error != float("inf"):
+                    if rel_error != float("inf") and not plot_clean:
                         ax.annotate(
                             f"{np.abs(rel_error) * 100:.1f}%",
                             (x, y),
@@ -342,22 +346,6 @@ def plot_step2(
         # Remove existing annotation
         for child in existing_annotations:
             child.remove()
-
-        from adjustText import adjust_text
-
-        adjust_text(
-            texts,
-            arrowprops=dict(arrowstyle="-", color="gray", lw=0.5, alpha=0.5),
-            avoid_points=True,
-            avoid_self=True,
-            avoid_lines=True,
-            existing_annotations=existing_annotations,
-            autoalign="xy",
-            force_points=0.5,
-            force_text=0.2,
-            expand_points=(1.5, 1.5),
-            ax=ax,
-        )
     else:
         ax.legend(loc="upper right", ncols=1, fontsize=FONTSIZE)
     x_label_name = {

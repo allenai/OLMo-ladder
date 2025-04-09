@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from scaling.fitting_functions import (
+from ladder.scaling.fitting_functions import (
     get_coefficients,
     get_std_errors,
     grad_log_sigmoid_fit,
@@ -18,7 +18,7 @@ from scaling.fitting_functions import (
     sigmoid,
     sigmoid_fit,
 )
-from scaling.utils import (
+from ladder.scaling.utils import (
     get_final_configs,
     get_step2_data_by_name,
     get_task_sets,

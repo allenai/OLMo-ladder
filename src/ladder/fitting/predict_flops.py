@@ -7,17 +7,17 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from fitting.step1_flops import fit_step1
-from fitting.step2 import fit_step2
-from fitting.step2_mc import fit_step2 as fit_step2_mc
-from scaling.fitting_functions import (
+from ladder.fitting.step1_flops import fit_step1
+from ladder.fitting.step2 import fit_step2
+from ladder.fitting.step2_mc import fit_step2 as fit_step2_mc
+from ladder.scaling.fitting_functions import (
     chinchilla_flops_2_param_fit,
     chinchilla_flops_fit,
     chinchilla_flops_negated_fit,
     log_sigmoid,
     sigmoid,
 )
-from scaling.utils import (
+from ladder.scaling.utils import (
     get_final_configs,
     get_step1_data_by_name,
     get_step2_data_by_name,
@@ -206,6 +206,7 @@ def plot_chained(
     task_name,
     fit_str,
     ax=plt.gca(),
+    plot_clean=False,
 ):
     # plot the fitted curve
     for name, data in plotted_predicted_data_by_name.items():
@@ -214,8 +215,8 @@ def plot_chained(
             data["fs"],
             data["ys"],
             color=config.color,
-            linestyle="--",
-            alpha=0.7 if config.color != "grey" else 0.1,
+            linestyle=("--" if not plot_clean else "-"),
+            alpha=(0.7 if not plot_clean else 0.05) if config.color != "grey" else 0.1,
             linewidth=0.5,
             label=f"{config.label} (fitted)" if config.mode == "train" else None,
         )
@@ -232,10 +233,9 @@ def plot_chained(
                 y,
                 color=config.color,
                 alpha=0.7 if config.color != "grey" else 0.1,
-                marker=(
-                    MARKERS[size_idx] if config.mode == "train" and size_idx < len(MARKERS) else "o"
-                ),
-                s=20 if config.mode == "train" else 20,
+                marker=MARKERS[size_idx] if config.mode == "train" and size_idx < len(MARKERS) else ("x" if config.mode == "eval" else "o"),
+                # s=20 if config.mode == "train" else (20 if not plot_clean else 10),
+                s=(20 if not plot_clean else (10 if config.mode == "eval" else 5)),
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
             )
 
@@ -249,20 +249,21 @@ def plot_chained(
                     y_pred,
                     color=config.color,
                     alpha=0.7 if config.color != "grey" else 0.1,
-                    marker="x",
-                    s=20,
+                    marker="o",
+                    s=(20 if not plot_clean else 10),
                     label=f"{config.label} (predicted)",
                 )
-                ax.annotate(
-                    f"{abs(rel_error * 100):.1f}%",
-                    (f, y_pred),
-                    textcoords="offset points",
-                    xytext=(10, -5 + 10 * num_eval_annotation),
-                    ha="left",
-                    va="bottom",
-                    fontsize=FONTSIZE,
-                    color=config.color,
-                )
+                if not plot_clean:
+                    ax.annotate(
+                        f"{abs(rel_error * 100):.1f}%",
+                        (f, y_pred),
+                        textcoords="offset points",
+                        xytext=(10, -5 + 10 * num_eval_annotation),
+                        ha="left",
+                        va="bottom",
+                        fontsize=FONTSIZE,
+                        color=config.color,
+                    )
                 num_eval_annotation += 1
 
     ax.set_xscale("log")
