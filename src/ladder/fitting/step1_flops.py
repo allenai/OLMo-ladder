@@ -70,9 +70,10 @@ def fit_step1(data_by_name, y_metric, use_two_param=False):
         # Filter out nan points
         train_fs, train_xs = np.array(train_fs), np.array(train_xs)
         mask = ~np.isnan(train_fs) & ~np.isnan(train_xs)
-        train_fs = train_fs[mask]
-        train_xs = train_xs[mask]
-        print("Filering out NaN points for fitting step 1")
+        if not mask.all():
+            train_fs = train_fs[mask]
+            train_xs = train_xs[mask]
+            print(f"Filtering out NaN points for fitting step 1: {data_by_name}")
 
         coefficients, cov = get_coefficients_huber(
             train_fs,

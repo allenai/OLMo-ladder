@@ -92,9 +92,10 @@ def fit_single_step(data_by_name, task_name, use_flops=False):
                 # Filter out nan points
                 train_fs, train_ys = np.array(train_fs), np.array(train_ys)
                 mask = ~np.isnan(train_fs) & ~np.isnan(train_ys)
-                train_fs = train_fs[mask]
-                train_ys = train_ys[mask]
-                print('Filering out NaN points for fitting step 1')
+                if not mask.all():
+                    train_fs = train_fs[mask]
+                    train_xs = train_xs[mask]
+                    print(f"Filtering out NaN points for fitting step 1: {data_by_name}")
 
                 x, y = train_fs, train_ys
                 fit_f, fit_grad = combined_flops_sigmoid_fit, grad_combined_flops_sigmoid_fit
