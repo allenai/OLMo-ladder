@@ -130,7 +130,7 @@ def fit_single_step(data_by_name, task_name, use_flops=False):
 
             try_idx += 1
 
-    warnings.warn(f"Failed to optimize single step 1 on {task_name}")
+    warnings.warn(f"Failed to optimize single step 1 on {task_name}", RuntimeWarning)
     return coefficients
 
 
