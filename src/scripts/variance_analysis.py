@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from scipy import stats
 from predict import main as predict_main
 from step1 import main as step1_main
 from step2 import main as step2_main
@@ -330,6 +331,8 @@ def compute_variance(configs, keys, last_n_points, variant="rc_bpb"):
         xs = data["xs"][-last_n_points:]
         ys = data["ys"][-last_n_points:]
 
+        corr, p_val = stats.pearsonr(abs(np.array(xs)), abs(np.array(ys)))
+
         loss_std_dev = np.std(xs)
         loss_coeff_of_var = loss_std_dev / np.mean(xs)
         acc_std_dev = np.std(ys)
@@ -343,6 +346,8 @@ def compute_variance(configs, keys, last_n_points, variant="rc_bpb"):
             "acc_std_dev": acc_std_dev,
             "loss_coeff_of_var": loss_coeff_of_var,
             "acc_coeff_of_var": acc_coeff_of_var,
+            "corr": corr,
+            "p_val": p_val,
         }
 
     return name, variance_results
@@ -517,7 +522,6 @@ def print_table(df, last_n_points, print_table_as_latex=False):
 
 def print_correlation_table(df):
     """Compute pairwise pearson correlations between numeric columns"""
-    from scipy import stats
 
     numeric_cols = df.select_dtypes(include=["float64"]).columns
 
