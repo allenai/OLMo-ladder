@@ -38,6 +38,7 @@ Scaling laws can be fitted for taking modeling decisions, such as specific confi
 
 * [WSD ladder](README.md)
 * [muP ladder](README.md)
+* [Random seeds](README.md)
 
 TODO: links
 
