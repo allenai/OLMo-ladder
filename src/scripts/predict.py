@@ -277,7 +277,12 @@ def main():
             data = step2_data_by_name[args.target_name]
             actual_acc = data["ys"][-1]
             rel_error = np.abs(pred_acc - actual_acc) / actual_acc
-            results[task_name] = {"Actual": y, "Pred": y_pred, "Abs Error": abs(y_pred - y), "Rel Error": rel_error}
+            results[task_name] = {
+                "Actual": y,
+                "Pred": y_pred,
+                "Abs Error": abs(y_pred - y),
+                "Rel Error": rel_error,
+            }
             results_str += f"\n{task_name} | {pred_acc * 100:.1f} | {actual_acc * 100:.1f} | {abs(pred_acc - actual_acc) * 100:.1f} | {rel_error * 100:.1f}%"
         else:
             results_str += f"\n{task_name} | {pred_acc * 100:.1f} | - | - | -"

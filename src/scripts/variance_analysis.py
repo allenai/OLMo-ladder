@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from scipy import stats
 from predict import main as predict_main
+from scipy import stats
 from step1 import main as step1_main
 from step2 import main as step2_main
 

@@ -279,7 +279,9 @@ def main():
         )
 
     results = {}
-    results_str = "Task Name | Actual Value | Predicted Value | Abs Error | Relative Error | Fitting Error"
+    results_str = (
+        "Task Name | Actual Value | Predicted Value | Abs Error | Relative Error | Fitting Error"
+    )
     params_str = ""
 
     for i, task_name in enumerate(args.keys):
