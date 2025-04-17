@@ -31,6 +31,14 @@ pip install -e ".[all]"  # options include plotting, beaker, wandb, dev, ladder
 See [src/ladder](src/ladder/README.md) for instructions on running the ladder models. 
 Instructions for adding new evaluation sets can also be found there.
 
+## Task scaling laws
+
+TODO
+
+1. Fit a function from compute (N, D) to intermediate feature.
+2. Fit a function from intermediate feature to task accuracy.
+3. Two step prediction.
+
 
 ## Scaling laws for modeling decisions
 
