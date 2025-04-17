@@ -152,6 +152,9 @@ def predict_step1(configs, data_by_name, coefficients, y_metric):
             for f, y, y_pred in zip(data["fs"], data["xs"], predicted_data["xs"]):
                 rel_error_t = (y_pred - y) / y
                 unsigned_rel_errors.append(np.abs(rel_error_t))
+            e_y = 0
+            e_y_pred = 0
+            rel_error = 0
 
     return (
         predicted_data_by_name,
@@ -276,7 +279,7 @@ def main():
         )
 
     results = {}
-    results_str = "Task Name | Actual Value | Predicted Value | Relative Error | Fitting Error"
+    results_str = "Task Name | Actual Value | Predicted Value | Abs Error | Relative Error | Fitting Error"
     params_str = ""
 
     for i, task_name in enumerate(args.keys):
@@ -304,7 +307,7 @@ def main():
             "Rel Error": rel_error,
             "Fit Error": avg_unsigned_rel_error,
         }
-        results_str += f"\n{task_name} | {prettify(y, False)} | {prettify(y_pred, False)} | {prettify(rel_error)} | {prettify(avg_unsigned_rel_error)}"
+        results_str += f"\n{task_name} | {prettify(y, False)} | {prettify(y_pred, False)} | {prettify(abs(y_pred - y), False)} | {prettify(rel_error)} | {prettify(avg_unsigned_rel_error)}"
         params_str += (
             f"{tasks[task_name].display_name} & ${str_chinchilla_n_d_fit(coefficients)}$ \\\\\n"
         )

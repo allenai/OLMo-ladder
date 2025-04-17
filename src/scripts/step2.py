@@ -134,6 +134,10 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
             for x, y, y_pred in zip(data["xs"], data["ys"], predicted_data["ys"]):
                 rel_error_t = (y_pred - y) / y if y > 0 else float("inf")
                 unsigned_rel_errors.append(np.abs(rel_error_t))
+            e_y = 0
+            e_y_pred = 0
+            rel_error = 0
+            delta_error = 0
 
     xmin = min(min(data["xs"]) for data in data_by_name.values())
     xmax = max(max(data["xs"]) for data in data_by_name.values())
@@ -397,7 +401,7 @@ def main():
 
     print(params_str)
 
-    print(f"Mean relative error: {np.mean(np.abs(rel_errors)) * 100:.2f}%")
+    print(f"Total fitting error: {np.mean(np.abs(rel_errors)) * 100:.2f}%")
 
     handles, labels = axes[-1][-1].get_legend_handles_labels()
     # delete x-axis labels for all but the bottom row

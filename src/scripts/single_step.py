@@ -183,7 +183,7 @@ def main():
         num_rows, num_cols, figsize=(2.75 * num_cols, 2.25 * num_rows), squeeze=False
     )
 
-    results = "Task Name | Actual Value | Predicted Value | Relative Error"
+    results = "Task Name | Actual Value | Predicted Value | Absolute Error | Relative Error"
 
     for i, task_name in enumerate(args.keys):
         data_by_name = get_step1_data_by_name(
@@ -202,7 +202,7 @@ def main():
             plotted_predicted_data_by_name,
             (y, y_pred, rel_error),
         ) = predict_single_step(data_by_name, coefficients)
-        results += f"\n{task_name} | {prettify(y, False)} | {prettify(y_pred, False)} | {prettify(rel_error)}"
+        results += f"\n{task_name} | {prettify(y, False)} | {prettify(y_pred, False)} | {prettify(abs(y_pred - y), False)} | {prettify(rel_error)}"
 
         plot_single_step(
             configs,
