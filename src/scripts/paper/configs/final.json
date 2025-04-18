@@ -8,6 +8,7 @@
         ],
         "mode": "train",
         "n": 190354176,
+        "flops": 1903391232,
         "label": "190M",
         "color": "darkred"
     },
@@ -20,6 +21,7 @@
         ],
         "mode": "train",
         "n": 371262464,
+        "flops": 3443922944,
         "label": "370M",
         "color": "darkorange"
     },
@@ -32,6 +34,7 @@
         ],
         "mode": "train",
         "n": 758220288,
+        "flops": 6373843968,
         "label": "760M",
         "color": "darkgreen"
     },
@@ -44,6 +47,7 @@
         ],
         "mode": "train",
         "n": 1279395840,
+        "flops": 10109071360,
         "label": "1.3B",
         "color": "teal"
     },
@@ -53,6 +57,7 @@
         ],
         "mode": "eval",
         "n": 6887575552,
+        "flops": 49412071424,
         "label": "7B-4T",
         "color": "darkviolet"
     },
@@ -62,6 +67,7 @@
         ],
         "mode": "eval",
         "n": 13202396160,
+        "flops": 91335915520,
         "label": "13B-5T",
         "color": "mediumvioletred"
     }

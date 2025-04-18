@@ -5,6 +5,7 @@
         ],
         "mode": "eval",
         "n": 1279395840,
+        "flops": 10109071360,
         "label": "1.3B",
         "color": "teal"
     }
