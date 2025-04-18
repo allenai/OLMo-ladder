@@ -20,10 +20,11 @@ from scaling.fitting_functions import (
     grad_chinchilla_n_d_negated_fit,
 )
 from scaling.utils import (
+    TaskFittingResults,
     get_final_configs,
     get_step1_data_by_name,
     get_task_sets,
-    prettify,
+    print_results_table,
     tasks,
 )
 
@@ -129,7 +130,7 @@ def predict_step1(configs, data_by_name, coefficients, y_metric):
     else:
         raise ValueError(f"Unknown y_metric: {y_metric}")
 
-    y, y_pred, rel_error = 0.0, 0.0, 0.0
+    y, y_pred = 0.0, 0.0
 
     for name, data in data_by_name.items():
         predicted_data_by_name[name] = {
@@ -145,8 +146,8 @@ def predict_step1(configs, data_by_name, coefficients, y_metric):
 
         if configs[name].mode == "eval":
             predicted_data = predicted_data_by_name[name]
-            for d, e_y, e_y_pred in zip(data["ds"], data["xs"], predicted_data["xs"]):
-                rel_error = (e_y_pred - e_y) / e_y
+            e_y = data["xs"][-1]
+            e_y_pred = predicted_data["xs"][-1]
         else:
             predicted_data = predicted_data_by_name[name]
             for f, y, y_pred in zip(data["fs"], data["xs"], predicted_data["xs"]):
@@ -154,12 +155,11 @@ def predict_step1(configs, data_by_name, coefficients, y_metric):
                 unsigned_rel_errors.append(np.abs(rel_error_t))
             e_y = 0
             e_y_pred = 0
-            rel_error = 0
 
     return (
         predicted_data_by_name,
         plotted_predicted_data_by_name,
-        (e_y, e_y_pred, rel_error),
+        (e_y, e_y_pred),
         unsigned_rel_errors,
     )
 
@@ -271,18 +271,12 @@ def main():
     num_cols = min(4, num_tasks)
     num_rows = (num_tasks + num_cols - 1) // num_cols
 
-    fitting_error = 0
-
     if args.output_path:
         fig, axes = plt.subplots(
             num_rows, num_cols, figsize=(2.75 * num_cols, 2.25 * num_rows), squeeze=False
         )
 
-    results = {}
-    results_str = (
-        "Task Name | Actual Value | Predicted Value | Abs Error | Relative Error | Fitting Error"
-    )
-    params_str = ""
+    results = []
 
     for i, task_name in enumerate(args.keys):
         data_by_name = get_step1_data_by_name(
@@ -296,22 +290,20 @@ def main():
         (
             predicted_data_by_name,
             plotted_predicted_data_by_name,
-            (y, y_pred, rel_error),
+            (y, y_pred),
             unsigned_rel_errors,
         ) = predict_step1(configs, data_by_name, coefficients, y_metric=args.y_metric)
 
-        avg_unsigned_rel_error = np.mean(unsigned_rel_errors)
-        fitting_error += avg_unsigned_rel_error
+        avg_unsigned_rel_error = float(np.mean(unsigned_rel_errors))
 
-        results[task_name] = {
-            "Actual": y,
-            "Pred": y_pred,
-            "Rel Error": rel_error,
-            "Fit Error": avg_unsigned_rel_error,
-        }
-        results_str += f"\n{task_name} | {prettify(y, False)} | {prettify(y_pred, False)} | {prettify(abs(y_pred - y), False)} | {prettify(rel_error)} | {prettify(avg_unsigned_rel_error)}"
-        params_str += (
-            f"{tasks[task_name].display_name} & ${str_chinchilla_n_d_fit(coefficients)}$ \\\\\n"
+        results.append(
+            TaskFittingResults(
+                task_name=task_name,
+                y=y,
+                y_pred=y_pred,
+                fitting_error=avg_unsigned_rel_error,
+                fitted_function=f"${str_chinchilla_n_d_fit(coefficients)}$",
+            )
         )
 
         if args.output_path:
@@ -366,8 +358,9 @@ def main():
     for handle in legend.legend_handles:
         handle.set_alpha(1.0)
 
+    results_dict = {res.task_name: res.__dict__ for res in results}
     df = (
-        pd.DataFrame.from_dict(results, orient="index")
+        pd.DataFrame.from_dict(results_dict, orient="index")
         .reset_index()
         .rename({"index": "Task"}, axis=1)
     )
@@ -377,9 +370,7 @@ def main():
         fig.savefig(args.output_path, dpi=300, bbox_inches="tight")
         df.to_csv(args.output_path.replace(".pdf", ".csv").replace(".png", ".csv"), index=False)
 
-    print(params_str)
-    print(results_str)
-    print("Total fitting error: ", prettify(fitting_error / num_tasks))
+    print_results_table(results, show_fitted_function=True)
 
     return df
 

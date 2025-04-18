@@ -20,10 +20,11 @@ from scaling.fitting_functions import (
     sigmoid_fit,
 )
 from scaling.utils import (
+    TaskFittingResults,
     get_final_configs,
     get_step2_data_by_name,
     get_task_sets,
-    prettify,
+    print_results_table,
     tasks,
 )
 
@@ -110,8 +111,6 @@ def fit_step2(data_by_name, task_name, y_metric, _min=None, _max=None, use_log_s
 
 def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_sigmoid=False):
     predict_fn = log_sigmoid if use_log_sigmoid else sigmoid
-    fit_fn = log_sigmoid_fit if use_log_sigmoid else sigmoid_fit
-    grad_fit_fn = grad_log_sigmoid_fit if use_log_sigmoid else grad_sigmoid_fit
 
     unsigned_rel_errors = []
 
@@ -123,12 +122,8 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
             "ys": [predict_fn(x, *coefficients) for x in data["xs"]],  # type: ignore
         }
         if config.mode == "eval":
-            for x, e_y, e_y_pred in zip(data["xs"], data["ys"], predicted_data_by_name[name]["ys"]):
-                rel_error = (e_y_pred - e_y) / e_y if e_y > 0 else float("inf")
-                std_error = get_std_errors(
-                    [x], [e_y_pred], coefficients, cov, fit_fn, grad_fit_fn
-                )  # [0]
-                delta_error = 1.96 * std_error
+            e_y = data["ys"][-1]
+            e_y_pred = predicted_data_by_name[name]["ys"][-1]
         else:
             predicted_data = predicted_data_by_name[name]
             for x, y, y_pred in zip(data["xs"], data["ys"], predicted_data["ys"]):
@@ -136,8 +131,6 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
                 unsigned_rel_errors.append(np.abs(rel_error_t))
             e_y = 0
             e_y_pred = 0
-            rel_error = 0
-            delta_error = 0
 
     xmin = min(min(data["xs"]) for data in data_by_name.values())
     xmax = max(max(data["xs"]) for data in data_by_name.values())
@@ -152,7 +145,7 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
     return (
         predicted_data_by_name,
         plotted_predicted_data,
-        (e_y, e_y_pred, rel_error, delta_error),
+        (e_y, e_y_pred),
         unsigned_rel_errors,
     )
 
@@ -340,11 +333,8 @@ def main():
         num_rows, num_cols, figsize=(2.75 * num_cols, 2.5 * num_rows), squeeze=False
     )
 
-    results = {}
-    results_str = "Task Name | Actual Value | Predicted Value | Relative Error"
-    params_str = ""
+    results = []
 
-    rel_errors = []
     for i, task_name in enumerate(args.keys):
         data_by_name = get_step2_data_by_name(
             configs,
@@ -364,8 +354,8 @@ def main():
         (
             predicted_data_by_name,
             plotted_predicted_data,
-            (y, y_pred, rel_error, delta_error),
-            all_rel_errors,
+            (y, y_pred),
+            unsigned_rel_errors,
         ) = predict_step2(
             configs,
             data_by_name,
@@ -374,12 +364,19 @@ def main():
             y_metric=args.y_metric,
             use_log_sigmoid=args.use_log_sigmoid,
         )
-        rel_errors += all_rel_errors
 
+        avg_unsigned_rel_error = float(np.mean(unsigned_rel_errors))
         str_formula = str_sigmoid(coefficients, use_log_sigmoid=args.use_log_sigmoid)
-        results[task_name] = {"Actual": y, "Pred": y_pred, "Rel Error": rel_error}
-        results_str += f"\n{task_name} | {prettify(y, False)} | {prettify(y_pred, False)} | {prettify(rel_error)} | {str_formula}"
-        params_str += f"{tasks[task_name].display_name} & ${str_sigmoid(coefficients, use_log_sigmoid=args.use_log_sigmoid)}$ \\\\\n"
+
+        results.append(
+            TaskFittingResults(
+                task_name=task_name,
+                y=y,
+                y_pred=y_pred,
+                fitting_error=avg_unsigned_rel_error,
+                fitted_function=f"${str_sigmoid(coefficients, use_log_sigmoid=args.use_log_sigmoid)}$",
+            )
+        )
 
         # plot the actual and predicted data
         ax = axes[i // num_cols][i % num_cols]
@@ -398,10 +395,6 @@ def main():
             use_log_sigmoid=args.use_log_sigmoid,
             ax=ax,
         )
-
-    print(params_str)
-
-    print(f"Total fitting error: {np.mean(np.abs(rel_errors)) * 100:.2f}%")
 
     handles, labels = axes[-1][-1].get_legend_handles_labels()
     # delete x-axis labels for all but the bottom row
@@ -440,8 +433,9 @@ def main():
     for handle in legend.legend_handles:
         handle.set_alpha(1.0)
 
+    results_dict = {res.task_name: res.__dict__ for res in results}
     df = (
-        pd.DataFrame.from_dict(results, orient="index")
+        pd.DataFrame.from_dict(results_dict, orient="index")
         .reset_index()
         .rename({"index": "Task"}, axis=1)
     )
@@ -450,7 +444,7 @@ def main():
         fig.savefig(args.output_path, dpi=300, bbox_inches="tight")
         df.to_csv(args.output_path.replace(".pdf", ".csv").replace(".png", ".csv"), index=False)
 
-    print(results_str)
+    print_results_table(results, show_fitted_function=True)
 
     return df
 

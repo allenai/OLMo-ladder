@@ -2,7 +2,7 @@ import csv
 import json
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -279,13 +279,6 @@ def get_step2_data_by_name(
 MARKERS = {"0.5xC": "D", "1xC": "s", "2xC": "P", "5xC": "p", "10xC": "*", "": "o"}
 
 
-def prettify(rel_error, is_percentage=True):
-    if is_percentage:
-        return f"{rel_error * 100:+.1f}%"
-    else:
-        return f"{rel_error:.2f}"
-
-
 def get_ax(name):
     if "1xC" in name:
         return 0
@@ -296,3 +289,100 @@ def get_ax(name):
     if "10xC" in name:
         return 3
     return 4
+
+
+def prettify(rel_error: float, is_percentage: bool = True, is_accuracy: bool = False):
+    if is_percentage:
+        return f"{rel_error * 100:+.1f}%"
+    elif is_accuracy:
+        return f"{rel_error * 100:.1f}"
+    else:
+        return f"{rel_error:.2f}"
+
+
+@dataclass
+class TaskFittingResults:
+    task_name: str
+    """
+    The name of the task.
+    """
+
+    y: float
+    """
+    The actual target value.
+    """
+
+    y_pred: float
+    """
+    The predicted value.
+    """
+
+    fitted_function: Optional[str] = None
+    """
+    The fitted function with coefficients.
+    """
+
+    fitting_error: Optional[float] = None
+    """
+    The error of the fitted curve.
+    """
+
+    @property
+    def abs_error(self):
+        return abs(self.y_pred - self.y)
+
+    @property
+    def rel_error(self):
+        return (self.y_pred - self.y) / self.y
+
+
+def print_results_table(
+    results: List[TaskFittingResults],
+    show_fitted_function: bool = False,
+    is_accuracy: bool = False,
+    latex: bool = False,
+):
+    from prettytable import PrettyTable
+
+    table = PrettyTable()
+
+    assert len(results) > 0, "Results list is empty"
+    field_names = [
+        "Task Name",
+        "Actual Value",
+        "Predicted Value",
+        "Abs Error",
+        "Relative Error",
+    ]
+    if results[0].fitting_error is not None:
+        field_names.append("Fitting Error")
+
+    if show_fitted_function:
+        field_names.append("Fitted Function")
+
+    table.field_names = field_names
+
+    for result in results:
+        row = [
+            result.task_name,
+            prettify(result.y, False, is_accuracy),
+            prettify(result.y_pred, False, is_accuracy),
+            prettify(result.abs_error, False, is_accuracy),
+            prettify(result.rel_error),
+        ]
+        if result.fitting_error is not None:
+            row.append(prettify(result.fitting_error))
+        if show_fitted_function:
+            row.append(result.fitted_function)
+
+        table.add_row(row)
+    print(table)
+
+    if latex:
+        print(table.get_latex_string())
+
+    if results[0].fitting_error is not None:
+        total_fitting_error = sum(
+            [res.fitting_error for res in results if res.fitting_error is not None]
+        )
+        print("Total fitting error: ", prettify(total_fitting_error / len(results)))
