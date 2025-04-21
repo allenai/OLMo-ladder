@@ -1,17 +1,39 @@
 
 # Ladder
 
-The ladder is a set of small model configurations with the OLMo architecture, from sizes 190M to 3B.
+The ladder is a set of small model configurations with the OLMo architecture, from sizes 190M to 3B, all trained to varying lengths expressed by Chinchilla-optimal multipliers. The code is based on the older [OLMo](https://github.com/allenai/olmo) codebase. The newer version using [OLMo-core](https://github.com/allenai/olmo-core) is under construction.
 
-WIP: add instructions on how to update model config, etc.
 
-TODO: remove dependency on old OLMo code.
+## Launch a training run
+
+This will train the model, and run in-loop evaluations.
+
+```bash
+torchrun [OPTS..] src/ladder/ladder.py train
+    --model 190M
+    --length 1xC
+    --name olmo-2-ladder-190M-1xC
+    --device_batch_size 4
+```
+
+## Adding new evaluation sets
+
+New evals can be added to [ladder.py](ladder.py), and then to [src/scaling/utils.py](../scaling/utils.py) for fitting scaling laws.
+
+## Backfill new evaluations for existing ladder run
+
+This will only run (new) evaluations for an already trained model.
+
+```bash
+torchrun [OPTS..] src/ladder/ladder.py eval 
+    --model 190M
+    --length 1xC
+    --name olmo-2-ladder-190M-1xC-new-evals
+    --device_batch_size 4
+    --load_path saved_models/olmo-2-ladder-190M-1xC/step7272-unsharded
+```
 
 ## Beaker usage
-
-### Launch a training run
-
-TODO: run olmo-core ladder code, compare against old code, replace old code with olmo-core.
 
 ```bash
 ./src/ladder/ladder-launch.sh 4 \
@@ -24,8 +46,6 @@ TODO: run olmo-core ladder code, compare against old code, replace old code with
     --batch_size_divisor 128
 ```
 
-### Backfill new evaluations for existing ladder run
-
 ```bash
 ./src/ladder/ladder_eval-launch.sh 2 \
     --model 190M \
@@ -37,28 +57,3 @@ TODO: run olmo-core ladder code, compare against old code, replace old code with
     --batch_size_divisor 64 \
     --device_eval_batch_size 16 \
     --load_path /weka/oe-training-default/ai2-llm/checkpoints/OLMo-ladder/peteish-final-190M-1xC/step7272-unsharded
-```
-
-## Adding new evaluation sets
-
-New evals can be added to [ladder.py](ladder.py), and then to [src/scaling/utils.py](../scaling/utils.py) for fitting scaling laws.
-
-TODO: add instructions when we shift to using OLMo-core.
-
-
-### Variance analysis
-
-For new evaluation sets, variance analysis can be done as follows:
-
-1. Backfill results for the 1B-10xC ladder model (as shown above).
-2. Run analysis as follows:
-
-```bash
-python src/scripts/variance_analysis.py \
-    -k <new_eval_set> \
-    -c src/scripts/paper/configs/final_variance.json \
-    -o figures/variance.png \
-    --last_n_points 10 \
-    --run_prediction \
-    --print_table_as_latex
-```
