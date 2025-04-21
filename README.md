@@ -10,11 +10,10 @@ For details on reproducing results from the [paper](https://arxiv.org/pdf/2412.0
 - [Installation](#installation)
 - [Running the ladder](#running-the-ladder)
 - [Adding new evals](#adding-new-evals)
-- [Scaling laws for modeling](#scaling-laws-for-modeling-eg-hyperparameters-modeling-config-changes-etc)
-- [Scaling laws for data](#scaling-laws-for-data)
-- [Miscellaneous](#miscellaneous)
+- [Task Scaling Laws](#task-scaling-laws)
+- [Trained ladder models](#trained-models)
+- [Usage](#examples-of-usage-of-ladder-based-scaling-laws)
 - [Citation](#citation)
-
 
 
 ## Installation
@@ -33,32 +32,24 @@ Instructions for adding new evaluation sets can also be found there.
 
 ## Task scaling laws
 
-TODO
+We employ a two-step approach, first predicting an intermediate loss feature, and then, using it to predict the final task accuracy. 
 
-1. Fit a function from compute (N, D) to intermediate feature.
-2. Fit a function from intermediate feature to task accuracy.
-3. Two step prediction.
+![MMLU two-step prediction](src/scripts/paper/figures/mmlu_complete.png)
 
 
-## Scaling laws for modeling decisions
+## Trained models
 
-Scaling laws can be fitted for taking modeling decisions, such as specific configuration changes, hyperparameter choices, etc.
+* 190M models: [190M-1xC](), [190M-2xC](), [190M-5xC](), [190M-10xC]()
+* 370M models: [370M-1xC](), [370M-2xC](), [370M-5xC](), [370M-10xC]()
+* 760M models: [760M-1xC](), [760M-2xC](), [760M-5xC](), [760M-10xC]()
+* 1B  models: [1B-1xC](), [1B-2xC](), [1B-5xC](), [1B-10xC]()
 
-* [WSD ladder](README.md)
-* [muP ladder](README.md)
-* [Random seeds](README.md)
+## Examples of usage of ladder-based scaling laws
 
-TODO: links
+Scaling laws on ladder models can be used for pretraining development; for modeling decisions as well as data decisions. 
 
-## Scaling laws for data decisions
-
-TODO: David / Ian to provide recommendations based on combining Ian's ranking work with scaling laws.
-
-## Miscellaneous
-
-    Downloading W&B results.
-    TODO: Add comet.
-
+* [DataDecide](https://github.com/allenai/DataDecide)
+* [muP ladder (_upcoming_)]()
 
 ## Citation
 
