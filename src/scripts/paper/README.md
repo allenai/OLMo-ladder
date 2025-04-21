@@ -1,7 +1,7 @@
 
 # Establishing Task Scaling Laws via Compute-Efficient Model Ladders
 
-[Paper](https://arxiv.org/pdf/2412.04403)
+[![Paper](figures/paper.png)](https://arxiv.org/pdf/2412.04403)
 
 This guide shows how to fit scaling laws using the ladder training runs. For information on how to run ladder models, see [src/ladder/README.md](../../ladder/README.md).
 
@@ -34,8 +34,6 @@ The evaluation results for the ladder runs in the paper can be found at [src/scr
 
 ## Glossary
 
-TODO
-
 | Term | Definition |
 | ---- | ---------- |
 | Intermediate feature | The target metric used for step 1|
@@ -51,8 +49,10 @@ TODO
 
 ## Baseline ladder models
 
-TODO: Upload models (and checkpoints) to HF, link them here.
-
+* 190M models: [190M-1xC](), [190M-2xC](), [190M-5xC](), [190M-10xC]()
+* 370M models: [370M-1xC](), [370M-2xC](), [370M-5xC](), [370M-10xC]()
+* 760M models: [760M-1xC](), [760M-2xC](), [760M-5xC](), [760M-10xC]()
+* 1B  models: [1B-1xC](), [1B-2xC](), [1B-5xC](), [1B-10xC]()
 
 ## Step 1
 
@@ -228,10 +228,6 @@ python src/scripts/single_step.py \
 ```
 
 ![Single step prediction](figures/single_step_main.png)
-
-### Predicting MC accuracy
-
-TODO
 
 
 ## Citation
