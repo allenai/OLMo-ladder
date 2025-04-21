@@ -1,0 +1,11 @@
+{
+    "1.3B": {
+        "paths": [
+            "scripts/scaling/data/peteish-moreeval/190M-1xC.csv"
+        ],
+        "mode": "eval",
+        "n": 1279395840,
+        "label": "1.3B",
+        "color": "teal"
+    }
+}
