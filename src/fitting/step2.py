@@ -20,6 +20,7 @@ from scaling.fitting_functions import (
     log_sigmoid,
     log_sigmoid_fit,
     sigmoid,
+    piecewise_sigmoid,
     sigmoid_fit,
 )
 from scaling.utils import (
@@ -123,6 +124,10 @@ def fit_step2(
         inital_bounds = [([-1.0, 0.0, 0.0, 0.0], [0.0, np.inf, np.inf, 1.0])]
         fit_function = sigmoid
 
+    # fit_function = piecewise_sigmoid
+    # p0s = [[-0.7, 0.6, 7.0, 1, 1]]
+    # inital_bounds = [([-1.0, 0.0, 0.0, 0.0, -np.inf], [0.0, np.inf, np.inf, 1.0, np.inf])]
+
     try_idx = 0
     while try_idx < len(p0s):
         try_p0 = p0s[try_idx]
@@ -173,6 +178,9 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
 
     unsigned_rel_errors = []
 
+    # predict_fn = piecewise_sigmoid
+    # fit_fn = piecewise_sigmoid
+
     e_y, e_y_pred, rel_error, delta_error = (
         float("-inf"),
         float("-inf"),
@@ -194,6 +202,7 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
                     [x], [e_y_pred], coefficients, cov, fit_fn, grad_fit_fn
                 )  # [0]
                 delta_error = 1.96 * std_error
+                # std_error, delta_error = 0, 0
         else:
             predicted_data = predicted_data_by_name[name]
             for x, y, y_pred in zip(data["xs"], data["ys"], predicted_data["ys"]):
@@ -204,7 +213,7 @@ def predict_step2(configs, data_by_name, coefficients, cov, y_metric, use_log_si
     xmax = max(max(data["xs"]) for data in data_by_name.values())
     xmin = xmin - 0.2 * (xmax - xmin)
 
-    xs = np.linspace(xmin, xmax, 100)
+    xs = np.linspace(xmin, xmax, 1000)
     plotted_predicted_data = {
         "xs": xs,
         "ys": [predict_fn(x, *coefficients) for x in xs],  # type: ignore
@@ -233,6 +242,7 @@ def plot_step2(
     add_texts=False,
     show_fit_error=False,
     ax=plt.gca(),
+    plot_clean=False,
 ):
     fit_fn = log_sigmoid_fit if use_log_sigmoid else sigmoid_fit
     grad_fit_fn = grad_log_sigmoid_fit if use_log_sigmoid else grad_sigmoid_fit
@@ -245,6 +255,7 @@ def plot_step2(
         fit_fn,
         grad_fit_fn,
     )
+    # std_errors = np.zeros_like(plotted_predicted_data["ys"])
 
     # Compute prediction intervals
     plotted_y_lower = plotted_predicted_data["ys"] - 1.96 * std_errors
@@ -264,9 +275,9 @@ def plot_step2(
                 data["ys"],
                 color=config.color,
                 marker="o" if config.mode == "train" else "x",
-                s=5,
+                s=5 if not plot_clean else 3,
                 edgecolors="none" if config.mode == "train" else None,
-                alpha=0.7 if config.mode == "train" else 1.0,
+                alpha=(0.7 if not plot_clean else 0.5) if config.mode == "train" else 1.0,
                 label=f"{config.label} ({'fitted' if config.mode == 'train' else 'target'})",
             )
         for i, (x, y, y_pred) in enumerate(zip(data["xs"], data["ys"], predicted_data["ys"])):
@@ -284,19 +295,20 @@ def plot_step2(
                     y,
                     color=config.color,
                     marker="x",
-                    s=20,
+                    s=20 if not plot_clean else 10,
                     label=f"{config.label} ({'target'})",
                 )
-                if config.label in ["7B-4T", "13B-5T"]:
+                # if config.label in ["7B-4T", "13B-5T"]:
+                if (config.mode == 'eval' and len(data_by_name) < 10):
                     ax.scatter(
                         x,
                         y_pred,
                         color=config.color,
                         marker="o",
-                        s=20,
+                        s=20 if not plot_clean else 10,
                         label=f"{config.label} ({'predicted'})",
                     )
-                    if rel_error != float("inf"):
+                    if rel_error != float("inf") and not plot_clean:
                         ax.annotate(
                             f"{np.abs(rel_error) * 100:.1f}%",
                             (x, y),

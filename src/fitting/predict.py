@@ -149,16 +149,27 @@ def plot_chained(
     task_name,
     fit_str,
     ax=plt.gca(),
+    plot_compute=False
 ):
     # plot the fitted curve
     for name, data in plotted_predicted_data_by_name.items():
         config = configs[name]
+        color = config.color
+        if plot_compute:
+            n = config.n
+            xs = 6*n*data["ds"]
+            if config.mode == "train":
+                color = 'grey'
+            else:
+                color = '#1f77b4'  # Default matplotlib blue
+        else:
+            xs = data["ds"]
         ax.plot(
-            data["ds"],
+            xs,
             data["ys"],
-            color=config.color,
+            color=color,
             linestyle="--",
-            alpha=0.7 if config.color != "grey" else 0.3,
+            alpha=0.7 if color != "grey" else 0.3,
             linewidth=1.5,
             label=f"{config.label} (fitted)" if config.mode == "train" else None,
         )
@@ -170,44 +181,80 @@ def plot_chained(
         predicted_data = predicted_data_by_name[name]
 
         lns = data.get("ls", ["o"] * len(data["ds"]))
-        for i, (d, y, ln) in enumerate(zip(data["ds"], data["xs"], lns)):
-            ax.scatter(
-                d,
-                y,
-                color=config.color,
-                marker=MARKERS[ln] if config.mode == "train" and ln in MARKERS else "o",
-                s=50 if config.mode == "train" else 20,
-                label=f"{config.label} (target)" if config.mode == "eval" else None,
-            )
+        for i, (n, d, y, ln) in enumerate(zip(data["ns"], data["ds"], data["xs"], lns)):
+            color = config.color
+            if plot_compute:
+                xs = 6*n*d
+                if config.mode == "train":
+                    color = 'grey'
+                else:
+                    color = '#1f77b4'  # Default matplotlib blue
+            else:
+                xs = d
+            if len(data["ds"]) < 20:
+                ax.scatter(
+                    xs,
+                    y,
+                    color=color,
+                    marker=MARKERS[ln] if config.mode == "train" and ln in MARKERS else "o",
+                    s=50 if config.mode == "train" else 20,
+                    label=f"{config.label} (target)" if config.mode == "eval" else None,
+                )
 
-        for d, y, y_pred in zip(data["ds"], data["xs"], predicted_data["ys"]):
+        # for d, y, y_pred in zip(data["ds"], data["xs"], predicted_data["ys"]):
+        for n, d, y, y_pred in zip(data["ns"], data["ds"], data["xs"], predicted_data["ys"]):
             rel_error = (y_pred - y) / y if y > 0 else float("inf")
             if config.mode == "train":
                 pass
             else:
+                color = config.color
+                if plot_compute:
+                    xs = 6*n*d
+                    color = '#1f77b4'  # Default matplotlib blue
+                else:
+                    xs = d
                 ax.scatter(
-                    d,
+                    xs,
                     y_pred,
-                    color=config.color,
+                    color=color,
                     marker="x",
                     s=20,
                     label=f"{config.label} (predicted)",
                 )
+                if plot_compute:
+                    xytext = (-32, -5 + 10 * num_eval_annotation)
+                    ax.annotate(
+                        "Rel. Error = ",
+                        (xs, y_pred),
+                        textcoords="offset points",
+                        xytext=xytext,
+                        ha="right",
+                        va="bottom",
+                        fontsize=FONTSIZE,
+                        color='k',
+                    )
+                    xytext = (-10, -5 + 10 * num_eval_annotation)
+                    color = 'r'
+                else:
+                    xytext = (10, -5 + 10 * num_eval_annotation)
                 ax.annotate(
                     f"{abs(rel_error * 100):.1f}%",
-                    (d, y_pred),
+                    (xs, y_pred),
                     textcoords="offset points",
-                    xytext=(10, -5 + 10 * num_eval_annotation),
-                    ha="left",
+                    xytext=xytext,
+                    ha="right",
                     va="bottom",
                     fontsize=FONTSIZE,
-                    color=config.color,
+                    color=color,
                 )
                 num_eval_annotation += 1
 
     ax.set_xscale("log")
     ax.legend(loc="upper right", ncols=1, fontsize=FONTSIZE)
-    ax.set_xlabel("Tokens (D)", fontsize=FONTSIZE)
+    if plot_compute:
+        ax.set_xlabel("Compute (FLOPs)", fontsize=FONTSIZE)
+    else:
+        ax.set_xlabel("Tokens (D)", fontsize=FONTSIZE)
     ax.set_ylabel("Task RC accuracy", fontsize=FONTSIZE)
     display_name = (
         tasks[task_name].display_name

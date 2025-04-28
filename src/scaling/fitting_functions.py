@@ -403,6 +403,10 @@ def sigmoid(x, a, x0, k, b):
     return o
 
 
+def piecewise_sigmoid(x, a, x0, k, b, xt):
+    return np.where(x > xt, 0.25, a / (1 + np.exp(-k * (x - x0))) + b)
+
+
 def log_sigmoid(x, a, x0, k, c=0.0):
     y = np.log(1 - 1 / (1 + np.exp(-k * (x - x0))) + c)
     o = (-a) * y + 1

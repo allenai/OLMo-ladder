@@ -195,6 +195,7 @@ def plot_step1(
     coefficients,
     cov,
     ax=plt.gca(),
+    plot_clean=False,
 ):
     # fmin = min(min(data["fs"]) for data in plotted_predicted_data_by_name.values())
     # fmax = max(max(data["fs"]) for data in plotted_predicted_data_by_name.values())
@@ -245,8 +246,8 @@ def plot_step1(
                 f,
                 y,
                 color=config.color,
-                marker=MARKERS[size_idx] if config.mode == "train" and size_idx < len(MARKERS) else "o",
-                s=20 if config.mode == "train" else 20,
+                marker=MARKERS[size_idx] if config.mode == "train" and size_idx < len(MARKERS) else ("x" if config.mode == "eval" else "o"),
+                s=(20 if not plot_clean else (10 if config.mode == "eval" else 5)), # 20 if config.mode == "train" else
                 label=f"{config.label} (target)" if config.mode == "eval" else None,
             )
 
@@ -259,20 +260,21 @@ def plot_step1(
                     f,
                     y_pred,
                     color=config.color,
-                    marker="x",
-                    s=20,
+                    marker="o",
+                    s=20 if not plot_clean else 10,
                     label=f"{config.label} ({'predicted'})",
                 )
-                ax.annotate(
-                    f"{abs(100 * rel_error):.1f}%",
-                    (f, y_pred),
-                    textcoords="offset points",
-                    xytext=(10, 1 - 10 * num_eval_annotation),
-                    ha="left",
-                    va="bottom",
-                    fontsize=FONTSIZE,
-                    color=config.color,
-                )
+                if not plot_clean:
+                    ax.annotate(
+                        f"{abs(100 * rel_error):.1f}%",
+                        (f, y_pred),
+                        textcoords="offset points",
+                        xytext=(10, 1 - 10 * num_eval_annotation),
+                        ha="left",
+                        va="bottom",
+                        fontsize=FONTSIZE,
+                        color=config.color,
+                    )
                 num_eval_annotation += 1
     avg_unsigned_rel_error = np.mean(unsigned_rel_errors)
 
