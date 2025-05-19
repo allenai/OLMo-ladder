@@ -42,7 +42,7 @@ def parse_args():
     return args
 
 
-def fit_single_step(data_by_name, task_name, use_flops=False):
+def fit_single_step(data_by_name, task_name=None, use_flops=False):
     train_nds: list = []
     train_fs: list = []
     train_ys: list = []
@@ -50,9 +50,12 @@ def fit_single_step(data_by_name, task_name, use_flops=False):
         if data["mode"] == "train":
             train_nds += [[n, d] for n, d in zip(data["ns"], data["ds"])]
             train_fs += data["fs"]
-            train_ys += data["xs"]
+            train_ys += data["ys"]
 
-    task_min = tasks[task_name].task_minimum if task_name in tasks else 0
+    if task_name is not None:
+        task_min = tasks[task_name].task_minimum if task_name in tasks else 0
+    else:
+        task_min = 0
 
     bounds: list
     if use_flops:
@@ -216,9 +219,11 @@ def plot_single_step(
         predicted_data = predicted_data_by_name[name]
 
         if use_flops:
-            xs, ys = data["fs"], data["xs"]
+            # xs, ys = data["fs"], data["xs"]
+            xs, ys = data["fs"], data["ys"]
         else:
-            xs, ys = data["ds"], data["xs"]
+            # xs, ys = data["ds"], data["xs"]
+            xs, ys = data["ds"], data["ys"]
 
         lns = data.get("ls", ["o"] * len(data["ds"]))
         for i, (d, y, ln) in enumerate(zip(xs, ys, lns)):

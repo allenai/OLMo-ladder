@@ -93,7 +93,7 @@ def predict_chained(
     plotted_predicted_data_by_name = {}
 
     dmin = 0.8 * min([min(data["ds"]) for data in data_by_name.values()])
-    dmax = 1.5 * max([max(data["ds"]) for data in data_by_name.values()])
+    dmax = 1 * max([max(data["ds"]) for data in data_by_name.values()])
 
     if y_metric == "rc_bpb" or y_metric == "c4" or y_metric == "rc_soft_log" or y_metric is None:
         step_1_fn = chinchilla_n_d_fit
@@ -168,9 +168,9 @@ def plot_chained(
             xs,
             data["ys"],
             color=color,
-            linestyle="--",
+            linestyle="-", # --
             alpha=0.7 if color != "grey" else 0.3,
-            linewidth=1.5,
+            linewidth=1, # 1.5
             label=f"{config.label} (fitted)" if config.mode == "train" else None,
         )
 
@@ -197,7 +197,7 @@ def plot_chained(
                     y,
                     color=color,
                     marker=MARKERS[ln] if config.mode == "train" and ln in MARKERS else "o",
-                    s=50 if config.mode == "train" else 20,
+                    s=30 if config.mode == "train" else 20,
                     label=f"{config.label} (target)" if config.mode == "eval" else None,
                 )
 
@@ -222,19 +222,20 @@ def plot_chained(
                     label=f"{config.label} (predicted)",
                 )
                 if plot_compute:
-                    xytext = (-32, -5 + 10 * num_eval_annotation)
-                    ax.annotate(
-                        "Rel. Error = ",
-                        (xs, y_pred),
-                        textcoords="offset points",
-                        xytext=xytext,
-                        ha="right",
-                        va="bottom",
-                        fontsize=FONTSIZE,
-                        color='k',
-                    )
-                    xytext = (-10, -5 + 10 * num_eval_annotation)
-                    color = 'r'
+                    # xytext = (-32, -5 + 10 * num_eval_annotation)
+                    # ax.annotate(
+                    #     "Rel. Error = ",
+                    #     (xs, y_pred),
+                    #     textcoords="offset points",
+                    #     xytext=xytext,
+                    #     ha="right",
+                    #     va="bottom",
+                    #     fontsize=FONTSIZE,
+                    #     color='k',
+                    # )
+                    # xytext = (-10, -5 + 10 * num_eval_annotation)
+                    # color = 'r'
+                    continue
                 else:
                     xytext = (10, -5 + 10 * num_eval_annotation)
                 ax.annotate(

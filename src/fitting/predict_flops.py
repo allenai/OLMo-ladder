@@ -207,6 +207,7 @@ def plot_chained(
     fit_str,
     ax=plt.gca(),
     plot_clean=False,
+    plot_compute=False
 ):
     # plot the fitted curve
     for name, data in plotted_predicted_data_by_name.items():
