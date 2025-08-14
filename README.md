@@ -49,7 +49,6 @@ We employ a two-step approach, first predicting an intermediate loss feature, an
 Scaling laws on ladder models can be used for pretraining development; for modeling decisions as well as data decisions. 
 
 * [DataDecide](https://github.com/allenai/DataDecide)
-* [muP ladder (_upcoming_)]()
 
 ## Citation
 
