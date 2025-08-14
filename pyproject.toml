@@ -84,7 +84,7 @@ version = { attr = "ladder.version.VERSION" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["ladder*"]
+include = ["ladder*", "scaling*", "fitting*"]
 exclude = []
 
 [tool.black]
