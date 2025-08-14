@@ -161,7 +161,7 @@ def plot_chained(
             if config.mode == "train":
                 color = 'grey'
             else:
-                color = '#1f77b4'  # Default matplotlib blue
+                color = '#F0519C'  # Ai2 pink
         else:
             xs = data["ds"]
         ax.plot(
@@ -188,7 +188,7 @@ def plot_chained(
                 if config.mode == "train":
                     color = 'grey'
                 else:
-                    color = '#1f77b4'  # Default matplotlib blue
+                    color = '#0A3234'  # Ai2 green
             else:
                 xs = d
             if len(data["ds"]) < 20:
@@ -210,7 +210,7 @@ def plot_chained(
                 color = config.color
                 if plot_compute:
                     xs = 6*n*d
-                    color = '#1f77b4'  # Default matplotlib blue
+                    color = '#F0519C'  # Ai2 pink
                 else:
                     xs = d
                 ax.scatter(
